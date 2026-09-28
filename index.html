@@ -90,7 +90,17 @@
 }
 
 *,*::before,*::after{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%}
+html{
+  -webkit-text-size-adjust:100%;
+  /* Fluid root size: every font-size in this site is set in rem, so this
+     single value scales all text — and, since icon/thumbnail dimensions
+     below are also in rem, images too — continuously with the viewport,
+     rather than jumping at fixed breakpoints. Saturates to 16px (full
+     size) by 375px — i.e. virtually every real phone — so this only
+     actually shrinks anything on screens narrower than that, which is
+     where crowding was a real problem; typical phones are unaffected. */
+  font-size:clamp(13px, calc(13px + (100vw - 320px) * 3 / 55), 16px);
+}
 @media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
 body{
   margin:0;
@@ -147,14 +157,14 @@ section[id]{scroll-margin-top:calc(var(--nav-h) + 12px)}
      background of its own. */
   color:#3A2513;
 }
-.brand svg{width:28px;height:28px;flex:none}
+.brand svg{width:1.75rem;height:1.75rem;flex:none}
 .theme-toggle{
   display:inline-flex;align-items:center;justify-content:center;
-  width:40px;height:40px;flex:none;border:1px solid rgba(58,37,19,.35);border-radius:50%;
+  width:2.5rem;height:2.5rem;flex:none;border:1px solid rgba(58,37,19,.35);border-radius:50%;
   background:transparent;color:#3A2513;cursor:pointer;transition:background-color .2s,border-color .2s,color .2s;
 }
 .theme-toggle:hover{background:rgba(138,90,43,.1)}
-.theme-toggle svg{width:19px;height:19px}
+.theme-toggle svg{width:1.1875rem;height:1.1875rem}
 .theme-toggle .icon-sun{display:none}
 :root[data-theme="dark"] .theme-toggle .icon-moon{display:none}
 :root[data-theme="dark"] .theme-toggle .icon-sun{display:block}
@@ -168,7 +178,7 @@ section[id]{scroll-margin-top:calc(var(--nav-h) + 12px)}
 .nav-links a:hover{color:#8E3B24;border-bottom-color:#A9804F}
 .menu-btn{
   display:none;align-items:center;justify-content:center;
-  width:44px;height:44px;border:1px solid rgba(58,37,19,.35);border-radius:3px;
+  width:2.75rem;height:2.75rem;border:1px solid rgba(58,37,19,.35);border-radius:3px;
   background:transparent;color:#3A2513;cursor:pointer;transition:color .2s,border-color .2s;
 }
 /* Once scrolled past the hero, the nav gets its own solid, theme-colored
@@ -251,7 +261,7 @@ section[id]{scroll-margin-top:calc(var(--nav-h) + 12px)}
 }
 /* map scale bar used as the title's underline */
 .scale-bar{
-  display:flex;width:min(320px,70%);height:9px;margin:26px 0 24px;
+  display:flex;width:min(20rem,70%);height:.5625rem;margin:26px 0 24px;
   border:1.5px solid #3A2513;
 }
 .scale-bar span{flex:1}
@@ -266,8 +276,8 @@ section[id]{scroll-margin-top:calc(var(--nav-h) + 12px)}
 .hero-stat{margin:14px 0 0;font-size:.96rem;color:#654428}
 .hero-actions{display:flex;flex-wrap:wrap;align-items:center;gap:14px 26px;margin-top:36px}
 .btn{
-  display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;
-  padding:12px 24px;border-radius:3px;border:1px solid var(--ink);
+  display:inline-flex;align-items:center;justify-content:center;gap:.625rem;min-height:3rem;
+  padding:.75rem 1.5rem;border-radius:3px;border:1px solid var(--ink);
   background:var(--ink);color:var(--parchment);
   font:600 1rem/1.2 var(--sans);text-decoration:none;cursor:pointer;
   transition:background-color .2s ease;
@@ -373,11 +383,11 @@ section[id]{scroll-margin-top:calc(var(--nav-h) + 12px)}
 }
 .issue-date{margin:.25em 0 .9em;font-family:var(--serif);font-style:italic;font-weight:500;font-size:1.6rem;color:var(--sepia)}
 .current-copy p.note{margin:0 0 26px;max-width:36rem;color:var(--ink-soft)}
-.current .dl{max-width:430px}
+.current .dl{max-width:26.875rem}
 
 @media (max-width:720px){
   .current-grid{grid-template-columns:1fr;justify-items:start}
-  .cover-lg{max-width:220px}
+  .cover-lg{max-width:13.75rem}
 }
 
 /* =========================================================
@@ -390,7 +400,7 @@ section[id]{scroll-margin-top:calc(var(--nav-h) + 12px)}
 .archive-search{position:relative;max-width:420px}
 .archive-search svg{
   position:absolute;left:14px;top:50%;transform:translateY(-50%);
-  width:18px;height:18px;color:var(--ink-soft);pointer-events:none;
+  width:1.125rem;height:1.125rem;color:var(--ink-soft);pointer-events:none;
 }
 .archive-search input{
   width:100%;padding:12px 14px 12px 40px;
@@ -415,42 +425,34 @@ section[id]{scroll-margin-top:calc(var(--nav-h) + 12px)}
   list-style:none;margin:0;padding:28px 0 0;
   display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:34px 40px;
 }
-.issue{display:grid;grid-template-columns:118px minmax(0,1fr);gap:18px;align-items:start}
+.issue{display:grid;grid-template-columns:7.375rem minmax(0,1fr);gap:1.125rem;align-items:start}
 .thumb{
-  display:block;width:118px;aspect-ratio:1/1.414;background:var(--vellum);
+  display:block;width:7.375rem;aspect-ratio:1/1.414;background:var(--vellum);
   box-shadow:0 1px 0 rgba(58,37,19,.2),0 10px 18px -10px rgba(58,37,19,.6);
 }
 .thumb svg,.thumb img{display:block;width:100%;height:100%;object-fit:cover}
 .issue h4{margin:0;font-family:var(--serif);font-weight:700;font-size:1.45rem;line-height:1.1}
 .issue .date{margin:.15em 0 .8em;color:var(--ink-soft);font-size:.98rem}
-/* Archive rows use slightly smaller buttons, sized so the two buttons
-   together match the height of the 118px-wide cover beside them. */
-.issue .dl-btn,.issue .dl-view{min-height:42px;padding:8px 12px;font-size:.92rem}
-.issue .dl-cancel{width:42px;min-height:42px}
+/* Archive rows use slightly smaller buttons than the "current issue" card,
+   sized so the two buttons together match the height of the cover beside
+   them. Both this and the cover above are in rem, so they — and the gap
+   between them — scale together fluidly with the root font-size set on
+   html at the top of this stylesheet, rather than needing a separate
+   small-screen breakpoint. */
+.issue .dl-btn,.issue .dl-view{min-height:2.625rem;padding:.5rem .75rem;font-size:.92rem}
+.issue .dl-cancel{width:2.625rem;min-height:2.625rem}
 @media (max-width:420px){
   .issues{grid-template-columns:1fr}
-}
-/* On genuinely narrow phones (well below common device widths), the fixed
-   118px cover leaves too little room beside it for the two stacked
-   buttons ("Download" and "Read online") to sit comfortably without
-   crowding. Shrink the cover and tighten the buttons a bit further here. */
-@media (max-width:380px){
-  .issue{grid-template-columns:88px minmax(0,1fr);gap:14px}
-  .thumb{width:88px}
-  .issue .dl-btn,.issue .dl-view{min-height:38px;padding:6px 10px;font-size:.86rem;gap:8px}
-  .issue .dl-cancel{width:38px;min-height:38px}
-  .issue .dl-icon{width:18px;height:21px}
-  .issue .dl-view svg{width:18px;height:18px}
 }
 
 /* =========================================================
    Download component
    ========================================================= */
-.dl{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.dl{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.5rem}
 .dl-btn{
   position:relative;overflow:hidden;isolation:isolate;
-  display:flex;align-items:center;gap:10px;min-height:46px;width:100%;
-  padding:10px 14px;border:1px solid var(--ink);border-radius:3px;
+  display:flex;align-items:center;gap:.625rem;min-height:2.875rem;width:100%;
+  padding:.625rem .875rem;border:1px solid var(--ink);border-radius:3px;
   background:var(--ink);color:var(--parchment);
   font:600 .95rem/1.25 var(--sans);text-align:left;cursor:pointer;
   transition:background-color .2s ease;
@@ -461,28 +463,28 @@ section[id]{scroll-margin-top:calc(var(--nav-h) + 12px)}
   background:linear-gradient(90deg,#8C6428,var(--brass));
   transition:width .18s linear;
 }
-.dl-icon{width:22px;height:26px;flex:none}
+.dl-icon{width:1.375rem;height:1.625rem;flex:none}
 .dl-spin{
-  display:none;width:20px;height:20px;flex:none;border-radius:50%;
+  display:none;width:1.25rem;height:1.25rem;flex:none;border-radius:50%;
   border:2.5px solid rgba(243,231,205,.35);border-top-color:var(--parchment);
   animation:spin .8s linear infinite;
 }
 .dl-label{min-width:0}
 .dl-cancel{
-  display:none;align-items:center;justify-content:center;width:46px;min-height:46px;
+  display:none;align-items:center;justify-content:center;width:2.875rem;min-height:2.875rem;
   border:1px solid var(--ink);border-radius:3px;background:transparent;color:var(--ink);
   font-size:1.35rem;line-height:1;cursor:pointer;
 }
 .dl-cancel:hover{background:rgba(58,37,19,.08)}
 .dl-view{
-  grid-column:1;display:flex;align-items:center;gap:10px;min-height:46px;
-  padding:10px 14px;border:1px solid var(--ink);border-radius:3px;
+  grid-column:1;display:flex;align-items:center;gap:.625rem;min-height:2.875rem;
+  padding:.625rem .875rem;border:1px solid var(--ink);border-radius:3px;
   background:transparent;color:var(--ink);
   font:600 .95rem/1.25 var(--sans);text-decoration:none;
   transition:background-color .2s ease;
 }
 .dl-view:hover{background:color-mix(in srgb,currentColor 10%,transparent)}
-.dl-view svg{width:22px;height:22px;flex:none}
+.dl-view svg{width:1.375rem;height:1.375rem;flex:none}
 .dl-msg:empty{min-height:0;margin-top:-8px}
 .dl-msg{grid-column:1/-1;margin:0;min-height:1.3em;font-size:.86rem;line-height:1.4;color:var(--ink-soft)}
 
@@ -498,10 +500,10 @@ section[id]{scroll-margin-top:calc(var(--nav-h) + 12px)}
 .dl[data-state="done"] .dl-fill{opacity:0;transition:none}
 .dl[data-state="error"] .dl-msg{color:var(--oxide);font-weight:600}
 
-.dl--large .dl-btn{min-height:58px;padding:14px 20px;font-size:1.06rem}
-.dl--large .dl-cancel{width:58px;min-height:58px}
-.dl--large .dl-view{min-height:58px;padding:14px 20px;font-size:1.06rem}
-.dl--large .dl-icon{width:26px;height:30px}
+.dl--large .dl-btn{min-height:3.625rem;padding:.875rem 1.25rem;font-size:1.06rem}
+.dl--large .dl-cancel{width:3.625rem;min-height:3.625rem}
+.dl--large .dl-view{min-height:3.625rem;padding:.875rem 1.25rem;font-size:1.06rem}
+.dl--large .dl-icon{width:1.625rem;height:1.875rem}
 .dl--large .dl-msg{font-size:.92rem}
 
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -525,7 +527,7 @@ section[id]{scroll-margin-top:calc(var(--nav-h) + 12px)}
   display:flex;align-items:center;gap:12px;margin:0 0 18px;
   font-family:var(--serif);font-weight:700;font-size:2rem;line-height:1;color:var(--parchment);
 }
-.footer-brand svg{width:34px;height:34px}
+.footer-brand svg{width:2.125rem;height:2.125rem}
 .footer p{margin:0 0 1.1em;line-height:1.7;max-width:36rem}
 .footer a{
   color:var(--parchment);text-decoration:underline;text-decoration-color:var(--brass);
