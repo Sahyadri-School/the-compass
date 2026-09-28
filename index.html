@@ -860,9 +860,13 @@ const fmtMB = b => {
   const mb = b / 1048576;
   return mb < 10 ? `${mb.toFixed(1)} MB` : `${Math.round(mb)} MB`;
 };
+// Files hosted elsewhere (e.g. Google Drive) can't be fetched from the page
+// (no CORS), so they skip size detection and go straight to the browser.
+const isRemote = is => { try{ return new URL(is.file, location.href).origin !== location.origin; }catch(e){ return false; } };
 function detectSizes(){
   if (!/^https?:$/.test(location.protocol)) return;
   ISSUES.forEach(async is => {
+    if (isRemote(is)) return;
     try{
       const r = await fetch(is.file, {method:"HEAD", cache:"no-cache"});
       if (!r.ok) return;
@@ -919,7 +923,7 @@ async function startDownload(id){
   clearTimeout(timers.get(id));
   const name = is.file.split("/").pop();
 
-  if (!/^https?:$/.test(location.protocol)) { directDownload(is); return; }
+  if (!/^https?:$/.test(location.protocol) || isRemote(is)) { directDownload(is); return; }
 
   const ctrl = new AbortController();
   active.set(id, ctrl);
