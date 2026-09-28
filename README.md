@@ -120,6 +120,15 @@ Opening `index.html` by double-clicking works, but file sizes and the download p
 python3 -m http.server 8000
 ```
 
+## License
+
+This repo carries two separate licenses, since the code and the magazine content are different kinds of thing:
+
+- **The website's code** (HTML/CSS/JS) — [MIT](LICENSE). Reuse it for your own site freely.
+- **The magazine content** (issues, articles, PDFs) — [CC BY-NC-SA 4.0](LICENSE-CONTENT.md). Teachers and students can freely download, print, share, and build on it with credit, for non-commercial use.
+
+The CC license is also linked in the site's footer and on the submissions page, so contributors and readers see it without having to dig through this repo.
+
 ## What's inside
 
 - 3D brass compass: three.js. The case turns as you scroll, and the needle swings and settles back to north.
