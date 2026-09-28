@@ -65,6 +65,8 @@ Issue data lives in `data/issues.json` (not in `index.html` anymore), so there a
 
 This repo ships a `.pages.yml` config for [Pages CMS](https://pagescms.org), a free, open-source editor that works directly against a GitHub repo — it's just a web form, no code involved.
 
+📄 **[docs/how-to-add-an-issue.pdf](docs/how-to-add-an-issue.pdf)** — a one-page printable guide for anyone on the editorial team doing this without touching code or GitHub directly.
+
 1. Go to [app.pagescms.org](https://app.pagescms.org) and sign in with GitHub.
 2. Install the Pages CMS GitHub App on this repo (first time only).
 3. Open the repo — it'll pick up `.pages.yml` automatically.
