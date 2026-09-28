@@ -138,13 +138,20 @@ section[id]{scroll-margin-top:calc(var(--nav-h) + 12px)}
 }
 .brand{
   display:flex;align-items:center;gap:10px;text-decoration:none;
-  font-family:var(--serif);font-weight:700;font-size:1.3rem;letter-spacing:.01em;color:var(--ink);
+  font-family:var(--serif);font-weight:700;font-size:1.3rem;letter-spacing:.01em;
+  /* Fixed (not theme-linked): the nav sits transparently over the hero,
+     which is always the light "lit parchment" palette regardless of site
+     theme, so nav text needs a color that stays legible against it. Once
+     scrolled past the hero (.nav.is-scrolled below), it switches to the
+     theme-aware color instead, since the nav then has a solid themed
+     background of its own. */
+  color:#3A2513;
 }
 .brand svg{width:28px;height:28px;flex:none}
 .theme-toggle{
   display:inline-flex;align-items:center;justify-content:center;
-  width:40px;height:40px;flex:none;border:1px solid var(--card-border);border-radius:50%;
-  background:transparent;color:var(--ink);cursor:pointer;transition:background-color .2s,border-color .2s;
+  width:40px;height:40px;flex:none;border:1px solid rgba(58,37,19,.35);border-radius:50%;
+  background:transparent;color:#3A2513;cursor:pointer;transition:background-color .2s,border-color .2s,color .2s;
 }
 .theme-toggle:hover{background:rgba(138,90,43,.1)}
 .theme-toggle svg{width:19px;height:19px}
@@ -154,16 +161,29 @@ section[id]{scroll-margin-top:calc(var(--nav-h) + 12px)}
 .nav-right{display:flex;align-items:center;gap:clamp(14px,2.2vw,22px)}
 .nav-links{display:flex;gap:clamp(14px,2.4vw,30px);list-style:none;margin:0;padding:0}
 .nav-links a{
-  text-decoration:none;font-size:1.02rem;font-weight:700;color:var(--ink);
+  text-decoration:none;font-size:1.02rem;font-weight:700;color:#3A2513;
   padding:6px 0;border-bottom:1.5px solid transparent;transition:color .2s,border-color .2s;
   text-shadow:0 1px 0 rgba(255,248,230,.55);
 }
-.nav-links a:hover{color:var(--oxide);border-bottom-color:var(--sepia-soft)}
+.nav-links a:hover{color:#8E3B24;border-bottom-color:#A9804F}
 .menu-btn{
   display:none;align-items:center;justify-content:center;
-  width:44px;height:44px;border:1px solid var(--card-border);border-radius:3px;
-  background:transparent;color:var(--ink);cursor:pointer;
+  width:44px;height:44px;border:1px solid rgba(58,37,19,.35);border-radius:3px;
+  background:transparent;color:#3A2513;cursor:pointer;transition:color .2s,border-color .2s;
 }
+/* Once scrolled past the hero, the nav gets its own solid, theme-colored
+   background — so its text should switch to theme-aware colors here. */
+.nav.is-scrolled .brand,
+.nav.is-scrolled .theme-toggle,
+.nav.is-scrolled .menu-btn,
+.nav.is-scrolled .nav-links a{ color:var(--ink); }
+.nav.is-scrolled .theme-toggle,
+.nav.is-scrolled .menu-btn{ border-color:var(--card-border); }
+.nav.is-scrolled .nav-links a:hover{ color:var(--oxide); border-bottom-color:var(--sepia-soft); }
+/* Mobile dropdown always has its own solid themed background (see
+   .nav.is-open below), so its links should always be theme-aware too. */
+.nav.is-open .nav-links a{ color:var(--ink); }
+.nav.is-open .nav-links a:hover{ color:var(--oxide); border-bottom-color:var(--sepia-soft); }
 @media (max-width:720px){
   .menu-btn{display:inline-flex}
   .nav-links{
@@ -222,23 +242,28 @@ section[id]{scroll-margin-top:calc(var(--nav-h) + 12px)}
   margin:0;
   font-family:var(--serif);font-weight:700;
   font-size:clamp(3.5rem,8.6vw,7.6rem);
-  line-height:.9;letter-spacing:-.012em;color:var(--ink);
+  line-height:.9;letter-spacing:-.012em;
+  /* Fixed, not var(--ink): the hero's background is always the light "lit
+     parchment" palette regardless of site theme (see the dark-theme note
+     in :root[data-theme="dark"] above), so its text stays fixed too. */
+  color:#3A2513;
   text-shadow:0 1px 0 rgba(255,248,230,.6);
 }
 /* map scale bar used as the title's underline */
 .scale-bar{
   display:flex;width:min(320px,70%);height:9px;margin:26px 0 24px;
-  border:1.5px solid var(--ink);
+  border:1.5px solid #3A2513;
 }
 .scale-bar span{flex:1}
-.scale-bar span:nth-child(odd){background:var(--ink)}
+.scale-bar span:nth-child(odd){background:#3A2513}
 .hero-issue{
   margin:0 0 18px;
   font-family:var(--serif);font-style:italic;font-weight:600;
-  font-size:clamp(1.4rem,2.5vw,1.9rem);line-height:1.25;color:var(--sepia);
+  font-size:clamp(1.4rem,2.5vw,1.9rem);line-height:1.25;color:#8A5A2B;
 }
-.hero-inst{margin:0;font-size:1.06rem;line-height:1.55;color:var(--ink-soft)}
-.hero-inst strong{display:block;font-weight:700;color:var(--ink);font-size:1.12rem}
+.hero-inst{margin:0;font-size:1.06rem;line-height:1.55;color:#654428}
+.hero-inst strong{display:block;font-weight:700;color:#3A2513;font-size:1.12rem}
+.hero-stat{margin:14px 0 0;font-size:.96rem;color:#654428}
 .hero-actions{display:flex;flex-wrap:wrap;align-items:center;gap:14px 26px;margin-top:36px}
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;
@@ -253,6 +278,14 @@ section[id]{scroll-margin-top:calc(var(--nav-h) + 12px)}
   text-decoration-color:var(--sepia-soft);text-decoration-thickness:1.5px;text-underline-offset:4px;
 }
 .text-link:hover{text-decoration-color:var(--ink)}
+/* Fixed, same reason as the hero text rules above: this button/link pair
+   sits on the permanently-light hero, so pin them to the light palette
+   regardless of site theme. (.text-link and .btn elsewhere on the page —
+   e.g. the archive's "Clear search" — stay theme-aware via the rules above.) */
+.hero-actions .btn{background:#3A2513;border-color:#3A2513;color:#F3E7CD}
+.hero-actions .btn:hover{background:#56391F;border-color:#56391F}
+.hero-actions .text-link{color:#3A2513;text-decoration-color:#A9804F}
+.hero-actions .text-link:hover{text-decoration-color:#3A2513}
 
 .stage{
   position:relative;justify-self:center;
@@ -532,6 +565,7 @@ section[id]{scroll-margin-top:calc(var(--nav-h) + 12px)}
           <strong>Community Mathematics Centre</strong>
           Schools of the Krishnamurti Foundation India (KFI)
         </p>
+        <p class="hero-stat" id="heroStat" hidden></p>
         <div class="hero-actions">
           <a class="btn" href="#current">See the current issue</a>
           <a class="text-link" href="#archive">Browse the archive</a>
@@ -727,10 +761,12 @@ function sortedIssues(){
 
 function render(){
   const heroIssue = document.getElementById("heroIssue");
+  const heroStat = document.getElementById("heroStat");
   const slot = document.getElementById("currentSlot");
 
   if (!ISSUES.length){
     heroIssue.textContent = "No issues published yet";
+    heroStat.hidden = true;
     slot.innerHTML = `<p class="note">The first issue hasn't been published yet — check back soon, or see <a href="submit.html">how to write for us</a>.</p>`;
     renderArchive();
     return;
@@ -738,6 +774,14 @@ function render(){
 
   const cur = sortedIssues()[0];
   heroIssue.textContent = `Current Issue: Volume ${cur.id}, ${cur.month} ${cur.year}`;
+
+  const earliestYear = Math.min(...ISSUES.map(is => is.year));
+  const count = ISSUES.length;
+  heroStat.textContent = count === 1
+    ? "1 issue published so far"
+    : `${count} issues published since ${earliestYear}`;
+  heroStat.hidden = false;
+
   slot.innerHTML = `
     <div class="current-grid">
       <span class="cover-lg">${coverMarkup(cur)}</span>
