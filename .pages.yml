@@ -1,0 +1,87 @@
+# Pages CMS configuration — https://pagescms.org
+#
+# This lets you add/edit magazine issues from a web form (app.pagescms.org)
+# instead of hand-editing data/issues.json. Every save commits straight to
+# `main`, which then triggers the existing GitHub Actions deploy — so a
+# saved issue goes live within a minute or two, same as any other push.
+#
+# NOTE ON PATHS: media.output below is deliberately relative (no leading
+# "/"), not the more common "/pdfs" style shown in Pages CMS's own docs.
+# That's because this site is hosted at a GitHub Pages *project* URL
+# (…github.io/the-compass/) rather than at a domain root, so a leading-slash
+# path would resolve one level too high and 404. Keep it relative.
+
+media:
+  - name: issue-pdfs
+    label: Issue PDFs
+    input: pdfs
+    output: pdfs
+    categories: [document]
+  - name: issue-covers
+    label: Issue covers
+    input: covers
+    output: covers
+    categories: [image]
+
+content:
+  - name: issues
+    label: Magazine Issues
+    type: file
+    path: data/issues.json
+    format: json
+    list: true
+    view:
+      fields: [id, month, year]
+      primary: id
+      sort: [year, volume, number]
+      default:
+        sort: year
+        order: desc
+    fields:
+      - name: id
+        label: Issue ID
+        description: Short id used in the URL/labels, e.g. "3-4" for Volume 3, No. 4.
+        type: string
+        required: true
+
+      - name: volume
+        label: Volume
+        type: number
+        required: true
+
+      - name: number
+        label: Issue number (within the volume)
+        type: number
+        required: true
+
+      - name: month
+        label: Month
+        type: select
+        options:
+          values: [January, February, March, April, May, June, July, August, September, October, November, December]
+        required: true
+
+      - name: year
+        label: Year
+        type: number
+        required: true
+
+      - name: file
+        label: PDF file
+        description: Upload the issue's PDF. Stored in the /pdfs folder.
+        type: file
+        media: issue-pdfs
+        categories: [document]
+        extensions: [pdf]
+        required: true
+
+      - name: size
+        label: File size (optional)
+        description: Leave blank — the site detects the real size automatically once the PDF is live. Only fill this in if you want to override that.
+        type: string
+
+      - name: cover
+        label: Cover image (optional)
+        description: Leave blank for an automatically generated cover, or upload a portrait-oriented image (roughly 600×850px). Stored in the /covers folder.
+        type: image
+        media: issue-covers

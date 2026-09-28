@@ -606,7 +606,7 @@ section[id]{scroll-margin-top:calc(var(--nav-h) + 12px)}
       </div>
 
       <div id="archiveSlot"></div>
-      <p class="archive-empty" id="archiveEmpty" hidden>No issues match your search. <button type="button" class="text-link" id="archiveReset">Clear search</button></p>
+      <p class="archive-empty" id="archiveEmpty" hidden><span class="empty-text">No issues match your search.</span> <button type="button" class="text-link" id="archiveReset">Clear search</button></p>
     </div>
   </section>
 </main>
@@ -644,25 +644,11 @@ section[id]{scroll-margin-top:calc(var(--nav-h) + 12px)}
 
 <script>
 /* =========================================================================
-   EDIT HERE: the list of issues.
-   - The FIRST entry is shown as the current issue; the rest form the archive.
-   - Put each PDF in the "pdfs" folder with the file name given below.
-   - size: leave "" and the site reads the real file size automatically once
-     it is online, or type it yourself, e.g. "45 MB".
-   - cover: leave "" for a generated cover, or give an image path such as
-     "covers/vol-3-3.jpg".
+   Issue data now lives in data/issues.json, not here — this lets Pages CMS
+   (or hand-editing that file) add new volumes without touching this script.
+   See README.md → "Adding a new issue" for both workflows.
    ========================================================================= */
-const ISSUES = [
-  { id:"3-3", volume:3, number:3, month:"July",    year:2026, file:"pdfs/The-Compass-Vol-3-3.pdf", size:"", cover:"" },
-  { id:"3-2", volume:3, number:2, month:"April",   year:2026, file:"pdfs/The-Compass-Vol-3-2.pdf", size:"", cover:"" },
-  { id:"3-1", volume:3, number:1, month:"January", year:2026, file:"pdfs/The-Compass-Vol-3-1.pdf", size:"", cover:"" },
-  { id:"2-4", volume:2, number:4, month:"October", year:2025, file:"pdfs/The-Compass-Vol-2-4.pdf", size:"", cover:"" },
-  { id:"2-3", volume:2, number:3, month:"July",    year:2025, file:"pdfs/The-Compass-Vol-2-3.pdf", size:"", cover:"" },
-  { id:"2-2", volume:2, number:2, month:"April",   year:2025, file:"pdfs/The-Compass-Vol-2-2.pdf", size:"", cover:"" },
-  { id:"2-1", volume:2, number:1, month:"January", year:2025, file:"pdfs/The-Compass-Vol-2-1.pdf", size:"", cover:"" },
-  { id:"1-2", volume:1, number:2, month:"October", year:2024, file:"pdfs/The-Compass-Vol-1-2.pdf", size:"", cover:"" },
-  { id:"1-1", volume:1, number:1, month:"July",    year:2024, file:"pdfs/The-Compass-Vol-1-1.pdf", size:"", cover:"" }
-];
+let ISSUES = [];
 
 (function(){
 "use strict";
@@ -737,10 +723,32 @@ function dlMarkup(is, large){
 /* ---------------------------------------------------------------- render */
 const ARCHIVE_STATE = { query:"" };
 
+const MONTH_ORDER = {January:1,February:2,March:3,April:4,May:5,June:6,July:7,August:8,September:9,October:10,November:11,December:12};
+function sortedIssues(){
+  // Sort by date (newest first) rather than trusting array/insertion order —
+  // Pages CMS's list editor tends to append new entries at the end, so we
+  // can't rely on "first entry = current issue" the way hand-edited JS did.
+  return [...ISSUES].sort((a,b) =>
+    (b.year - a.year) ||
+    ((MONTH_ORDER[b.month] || 0) - (MONTH_ORDER[a.month] || 0)) ||
+    ((b.number || 0) - (a.number || 0))
+  );
+}
+
 function render(){
-  const cur = ISSUES[0];
-  document.getElementById("heroIssue").textContent = `Current Issue: Volume ${cur.id}, ${cur.month} ${cur.year}`;
-  document.getElementById("currentSlot").innerHTML = `
+  const heroIssue = document.getElementById("heroIssue");
+  const slot = document.getElementById("currentSlot");
+
+  if (!ISSUES.length){
+    heroIssue.textContent = "No issues published yet";
+    slot.innerHTML = `<p class="note">The first issue hasn't been published yet — check back soon, or see <a href="submit.html">how to write for us</a>.</p>`;
+    renderArchive();
+    return;
+  }
+
+  const cur = sortedIssues()[0];
+  heroIssue.textContent = `Current Issue: Volume ${cur.id}, ${cur.month} ${cur.year}`;
+  slot.innerHTML = `
     <div class="current-grid">
       <span class="cover-lg">${coverMarkup(cur)}</span>
       <div class="current-copy">
@@ -763,7 +771,8 @@ function issueMatches(is, state){
 }
 
 function renderArchive(){
-  const past = ISSUES.slice(1).filter(is => issueMatches(is, ARCHIVE_STATE));
+  const rest = sortedIssues().slice(1);
+  const past = rest.filter(is => issueMatches(is, ARCHIVE_STATE));
   const vols = [...new Set(past.map(i => i.volume))].sort((a,b) => b - a);
   const slot = document.getElementById("archiveSlot");
   const empty = document.getElementById("archiveEmpty");
@@ -771,6 +780,10 @@ function renderArchive(){
   if (!past.length){
     slot.innerHTML = "";
     empty.hidden = false;
+    empty.querySelector(".empty-text").textContent = rest.length
+      ? "No issues match your search."
+      : "No back issues yet.";
+    empty.querySelector("#archiveReset").hidden = !rest.length;
     return;
   }
   empty.hidden = true;
@@ -1349,13 +1362,28 @@ function initCompass(){
 }
 
 /* ------------------------------------------------------------------ boot */
-render();
-initNav();
-initTheme();
-initArchiveControls();
-detectSizes();
-initCompass();
-initMap();
+async function loadIssues(){
+  try{
+    const res = await fetch("data/issues.json", {cache:"no-store"});
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (Array.isArray(data)) ISSUES = data;
+  }catch(e){
+    console.error("Could not load data/issues.json — showing no issues.", e);
+    ISSUES = [];
+  }
+}
+
+(async function boot(){
+  await loadIssues();
+  render();
+  initNav();
+  initTheme();
+  initArchiveControls();
+  detectSizes();
+  initCompass();
+  initMap();
+})();
 })();
 </script>
 </body>

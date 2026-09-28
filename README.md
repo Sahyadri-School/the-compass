@@ -11,6 +11,7 @@ the-compass/
 ├── .github/
 │   ├── workflows/deploy-pages.yml    ← builds & deploys to Pages, runs checks
 │   └── ISSUE_TEMPLATE/               ← bug report & content suggestion forms
+├── .pages.yml                     ← Pages CMS config (see "Adding a new issue")
 ├── index.html
 ├── submit.html                   ← "Write for us" submissions page
 ├── 404.html                      ← styled not-found page
@@ -18,6 +19,8 @@ the-compass/
 ├── sitemap.xml
 ├── CONTRIBUTING.md                ← workflow notes for editors
 ├── README.md
+├── data/
+│   └── issues.json                ← the list of issues — edit this, not index.html
 ├── pdfs/                         ← magazine PDFs go here
 │   ├── The-Compass-Vol-3-3.pdf
 │   ├── The-Compass-Vol-3-2.pdf
@@ -56,18 +59,35 @@ If issues grow past 100 MB, or the archive gets close to 1 GB, attach the PDFs t
 
 ## Adding a new issue
 
-Open `index.html`, find `const ISSUES = [` and add the new issue at the **top** of the list. The first entry automatically becomes the current issue (including the hero line), and the previous one moves into the archive.
+Issue data lives in `data/issues.json` (not in `index.html` anymore), so there are two ways to add one:
 
-```js
-{ id:"3-4", volume:3, number:4, month:"October", year:2026, file:"pdfs/The-Compass-Vol-3-4.pdf", size:"", cover:"" },
+### Option A — Pages CMS (recommended, no code editing)
+
+This repo ships a `.pages.yml` config for [Pages CMS](https://pagescms.org), a free, open-source editor that works directly against a GitHub repo.
+
+1. Go to [app.pagescms.org](https://app.pagescms.org) and sign in with GitHub.
+2. Install the Pages CMS GitHub App on this repo (first time only).
+3. Open the repo — it'll pick up `.pages.yml` automatically.
+4. Go to **Magazine Issues**, click **Add**, fill in the fields, and upload the PDF (and optionally a cover image).
+5. Save. Pages CMS commits straight to `main`, which triggers the usual GitHub Actions deploy — the new issue is live within a minute or two.
+
+You don't need to worry about issue order: the site sorts by year/month/number automatically, so whichever issue is dated latest becomes the current issue.
+
+### Option B — edit the JSON by hand
+
+Open `data/issues.json` and add an entry anywhere in the array:
+
+```json
+{ "id":"3-4", "volume":3, "number":4, "month":"October", "year":2026, "file":"pdfs/The-Compass-Vol-3-4.pdf", "size":"", "cover":"" }
 ```
 
 - `size` — leave empty and the site reads the real file size once it's online, or type it yourself (`"45 MB"`).
 - `cover` — leave empty for a generated cover, or give an image path such as `"covers/vol-3-4.jpg"` (an A4-shaped image around 600 × 850 px works well).
+- Put the PDF itself in the `pdfs/` folder with the matching file name.
 
 ## Search
 
-The Archive section has a search box that filters issues live by volume, month, or year — driven entirely by the `ISSUES` data, no extra setup needed.
+The Archive section has a search box that filters issues live by volume, month, or year — driven entirely by the `data/issues.json` data, no extra setup needed.
 
 ## Write for us
 
