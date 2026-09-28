@@ -63,15 +63,21 @@ Issue data lives in `data/issues.json` (not in `index.html` anymore), so there a
 
 ### Option A — Pages CMS (recommended, no code editing)
 
-This repo ships a `.pages.yml` config for [Pages CMS](https://pagescms.org), a free, open-source editor that works directly against a GitHub repo.
+This repo ships a `.pages.yml` config for [Pages CMS](https://pagescms.org), a free, open-source editor that works directly against a GitHub repo — it's just a web form, no code involved.
 
 1. Go to [app.pagescms.org](https://app.pagescms.org) and sign in with GitHub.
 2. Install the Pages CMS GitHub App on this repo (first time only).
 3. Open the repo — it'll pick up `.pages.yml` automatically.
-4. Go to **Magazine Issues**, click **Add**, fill in the fields, and upload the PDF (and optionally a cover image).
-5. Save. Pages CMS commits straight to `main`, which triggers the usual GitHub Actions deploy — the new issue is live within a minute or two.
+4. Click **"Magazine issues"**, then **Add**.
+5. Fill in the form — every field has a short explanation underneath it saying exactly what to type or upload. In short:
+   - **Volume number** and **Issue number** — which volume this belongs to, and which issue within it (1st, 2nd, 3rd…).
+   - **Month published** and **Year published** — pick from the dropdown / type the year.
+   - **Issue code** — just Volume, a dash, Issue number (e.g. Volume 3 Issue 4 → `3-4`).
+   - **Upload the issue (PDF)** — click to upload the actual magazine PDF.
+   - **Cover picture** and **File size** are both optional — you can leave them blank and the site fills them in automatically.
+6. Click **Save**. That's it — the new issue publishes automatically and is usually visible on the website within a minute or two.
 
-You don't need to worry about issue order: the site sorts by year/month/number automatically, so whichever issue is dated latest becomes the current issue.
+You don't need to worry about the order you add issues in: the website automatically sorts by year and month, so whichever issue is dated latest is shown as the current issue — even if it wasn't the last one you added.
 
 ### Option B — edit the JSON by hand
 
