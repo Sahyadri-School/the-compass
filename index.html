@@ -430,6 +430,18 @@ section[id]{scroll-margin-top:calc(var(--nav-h) + 12px)}
 @media (max-width:420px){
   .issues{grid-template-columns:1fr}
 }
+/* On genuinely narrow phones (well below common device widths), the fixed
+   118px cover leaves too little room beside it for the two stacked
+   buttons ("Download" and "Read online") to sit comfortably without
+   crowding. Shrink the cover and tighten the buttons a bit further here. */
+@media (max-width:380px){
+  .issue{grid-template-columns:88px minmax(0,1fr);gap:14px}
+  .thumb{width:88px}
+  .issue .dl-btn,.issue .dl-view{min-height:38px;padding:6px 10px;font-size:.86rem;gap:8px}
+  .issue .dl-cancel{width:38px;min-height:38px}
+  .issue .dl-icon{width:18px;height:21px}
+  .issue .dl-view svg{width:18px;height:18px}
+}
 
 /* =========================================================
    Download component
