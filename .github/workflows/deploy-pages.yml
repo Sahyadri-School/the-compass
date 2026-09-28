@@ -57,6 +57,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Build issues.json from data/issues/
+        run: node scripts/build-issues-index.js
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
@@ -64,7 +72,8 @@ jobs:
         run: |
           mkdir _site
           rsync -av --exclude='.git' --exclude='.github' --exclude='_site' \
-            --exclude='.gitignore' ./ _site/
+            --exclude='.gitignore' --exclude='scripts' --exclude='data/issues' \
+            ./ _site/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

@@ -19,8 +19,14 @@ the-compass/
 ├── sitemap.xml
 ├── CONTRIBUTING.md                ← workflow notes for editors
 ├── README.md
+├── scripts/
+│   └── build-issues-index.js      ← combines data/issues/* into data/issues.json
 ├── data/
-│   └── issues.json                ← the list of issues — edit this, not index.html
+│   ├── issues.json                ← GENERATED — don't edit directly, see below
+│   └── issues/                    ← the real source: one file per issue
+│       ├── 3-3.json
+│       ├── 3-2.json
+│       └── …
 ├── pdfs/                         ← magazine PDFs go here
 │   ├── The-Compass-Vol-3-3.pdf
 │   ├── The-Compass-Vol-3-2.pdf
@@ -79,11 +85,11 @@ This repo ships a `.pages.yml` config for [Pages CMS](https://pagescms.org), a f
    - **Cover picture** is optional — you can leave it blank and the site will draw a simple placeholder cover automatically.
 6. Click **Save**. That's it — the new issue publishes automatically and is usually visible on the website within a minute or two.
 
-You don't need to worry about the order you add issues in: the website automatically sorts by year and month, so whichever issue is dated latest is shown as the current issue — even if it wasn't the last one you added.
+You don't need to worry about the order you add issues in: the website automatically sorts by year and month, so whichever issue is dated latest is shown as the current issue — even if it wasn't the last one you added. Pages CMS's own "Magazine issues" list is sorted the same way (newest first) automatically too, so what you see while browsing there matches what visitors see on the site.
 
 ### Option B — edit the JSON by hand
 
-Open `data/issues.json` and add an entry anywhere in the array:
+Add a new file under `data/issues/`, named after the issue's code (e.g. `data/issues/3-4.json`):
 
 ```json
 { "id":"3-4", "volume":3, "number":4, "month":"October", "year":2026, "file":"pdfs/The-Compass-Vol-3-4.pdf", "size":"", "cover":"" }
@@ -92,6 +98,10 @@ Open `data/issues.json` and add an entry anywhere in the array:
 - `size` — leave empty and the site reads the real file size once it's online, or type it yourself (`"45 MB"`).
 - `cover` — leave empty for a generated cover, or give an image path such as `"covers/vol-3-4.jpg"` (an A4-shaped image around 600 × 850 px works well).
 - Put the PDF itself in the `pdfs/` folder with the matching file name.
+
+**Don't edit `data/issues.json` directly** — it's a generated file, combined automatically from everything in `data/issues/` by `scripts/build-issues-index.js`, which runs on every push (see `.github/workflows/deploy-pages.yml`). Direct edits to `data/issues.json` get overwritten the next time anything deploys. Always add or edit the individual files under `data/issues/` instead — whether by hand or through Pages CMS.
+
+Issues can be added in any order — the website works out which is the current one automatically. Pages CMS's own "Magazine issues" list also sorts newest-first automatically, since each issue is its own file (that's what enables the sorting — see the comments at the top of `.pages.yml` for the technical reasoning if you're curious).
 
 ## Search
 

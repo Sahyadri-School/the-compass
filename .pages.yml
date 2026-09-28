@@ -1,13 +1,29 @@
 # Pages CMS configuration — https://pagescms.org
 #
 # This lets you add a new magazine issue by filling in a simple web form —
-# no code, no GitHub website, nothing technical — instead of editing
-# data/issues.json by hand. Every time you click Save, it publishes
-# straight to the live website; the new issue is usually visible within a
-# minute or two.
+# no code, no GitHub website, nothing technical. Every time you click Save,
+# it publishes straight to the live website; the new issue is usually
+# visible within a minute or two.
 #
-# NOTE ON PATHS (for whoever maintains this file, not the person filling
-# in the form): media.output below is deliberately relative (no leading
+# HOW ISSUES ARE STORED (read this before changing the model below):
+# Each issue is its own file under data/issues/ (e.g. data/issues/3-4.json).
+# That's what Pages CMS edits, and — because it's a `type: collection`, not
+# a single file — Pages CMS can sort its own "Magazine issues" list by date,
+# newest first (see `view` below). A `type: file` with a single JSON array
+# doesn't support that sorting at all, which is why it's not modeled that
+# way.
+#
+# The website itself doesn't read data/issues/ directly — a static site
+# can't list a folder's contents at runtime. Instead, scripts/build-issues-
+# index.js combines every file in data/issues/ into one array at
+# data/issues.json, which is what index.html actually fetches. The deploy
+# workflow (.github/workflows/deploy-pages.yml) runs that script on every
+# push automatically, so this is invisible to whoever's just adding an
+# issue through the form. DO NOT hand-edit data/issues.json — it's
+# regenerated from data/issues/ on every deploy, so direct edits there get
+# silently overwritten. Edit the files in data/issues/ instead.
+#
+# NOTE ON PATHS: media.output below is deliberately relative (no leading
 # "/"), not the more common "/pdfs" style shown in Pages CMS's own docs.
 # That's because this site is hosted at a GitHub Pages *project* URL
 # (…github.io/the-compass/) rather than at a domain root, so a leading-slash
@@ -28,10 +44,10 @@ media:
 content:
   - name: issues
     label: "Magazine issues"
-    type: file
-    path: data/issues.json
+    type: collection
+    path: data/issues
     format: json
-    list: true
+    filename: "{fields.id}.json"
     view:
       fields: [id, month, year]
       primary: id
@@ -66,7 +82,7 @@ content:
 
       - name: id
         label: "Issue code"
-        description: "A short code combining the two numbers above: Volume, then a dash, then Issue number. Example: Volume 3, Issue 4 → write 3-4. This is just a label used around the site — it doesn't need to be anything fancy, just consistent."
+        description: "A short code combining the two numbers above: Volume, then a dash, then Issue number. Example: Volume 3, Issue 4 → write 3-4. This is also used as the file name, so it needs to be unique — don't reuse a code you've already used for another issue."
         type: string
         required: true
 

@@ -18,9 +18,10 @@ compass.math.2024@gmail.com. This file is about editing the site's code.
 
 ## Making common changes
 
-- **Add a new issue** — use Pages CMS (no code editing needed), or edit
-  `data/issues.json` by hand. See the "Adding a new issue" section in
-  [README.md](README.md).
+- **Add a new issue** — use Pages CMS (no code editing needed), or add a
+  file under `data/issues/` by hand (never edit `data/issues.json`
+  directly — it's auto-generated and gets overwritten on every deploy).
+  See the "Adding a new issue" section in [README.md](README.md).
 - **Edit submission guidelines** — edit `submit.html` directly; it's a
   self-contained file independent of `index.html`.
 - **Change site design or behaviour** — everything is in `index.html`'s
