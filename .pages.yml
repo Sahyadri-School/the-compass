@@ -35,6 +35,10 @@ media:
     input: pdfs
     output: pdfs
     categories: [document]
+  # issue-covers: kept for advanced use (see README "Option B" — hand-
+  # editing an issue's file to add a real cover image) but not exposed as
+  # a field below, since the site already generates a nice-looking cover
+  # automatically for every issue (see coverMarkup() in index.html).
   - name: issue-covers
     label: Issue covers
     input: covers
@@ -94,9 +98,3 @@ content:
         categories: [document]
         extensions: [pdf]
         required: true
-
-      - name: cover
-        label: "Cover picture (optional)"
-        description: "A picture of the issue's cover, shown on the website next to the download button. You can leave this blank — the site will automatically draw a simple placeholder cover instead. If you do upload one, a tall (portrait) image works best, roughly 600 pixels wide by 850 pixels tall."
-        type: image
-        media: issue-covers

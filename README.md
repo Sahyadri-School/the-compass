@@ -31,7 +31,7 @@ the-compass/
 │   ├── The-Compass-Vol-3-3.pdf
 │   ├── The-Compass-Vol-3-2.pdf
 │   └── …
-└── covers/                       ← optional cover images
+└── covers/                       ← not used by default (see below); only for hand-added cover overrides
     └── vol-3-3.jpg
 ```
 
@@ -82,8 +82,9 @@ This repo ships a `.pages.yml` config for [Pages CMS](https://pagescms.org), a f
    - **Month published** and **Year published** — pick from the dropdown / type the year.
    - **Issue code** — just Volume, a dash, Issue number (e.g. Volume 3 Issue 4 → `3-4`).
    - **Upload the issue (PDF)** — click to upload the actual magazine PDF.
-   - **Cover picture** is optional — you can leave it blank and the site will draw a simple placeholder cover automatically.
 6. Click **Save**. That's it — the new issue publishes automatically and is usually visible on the website within a minute or two.
+
+You don't need a cover image — the site automatically generates a simple, good-looking placeholder cover for every issue.
 
 You don't need to worry about the order you add issues in: the website automatically sorts by year and month, so whichever issue is dated latest is shown as the current issue — even if it wasn't the last one you added. Pages CMS's own "Magazine issues" list is sorted the same way (newest first) automatically too, so what you see while browsing there matches what visitors see on the site.
 
