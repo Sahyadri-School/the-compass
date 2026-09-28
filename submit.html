@@ -12,6 +12,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
 
+<script>
+  /* Bring back the dyslexia-friendly font before first paint if chosen last time. */
+  try{ if (localStorage.getItem("compass-dyslexic") === "on") document.documentElement.classList.add("dyslexic"); }catch(e){}
+</script>
 <style>
 :root{
   --parchment:#F3E7CD;
@@ -163,6 +167,25 @@ ol.steps li{margin-bottom:.7em}
 .footer p{margin:0 0 .6em}
 .footer a{color:var(--parchment);text-decoration:underline;text-decoration-color:var(--brass);text-underline-offset:3px}
 .footer-bottom{margin-top:1.4em;font-size:.86rem;opacity:.85}
+
+/* =========================================================
+   Dyslexia-friendly font (OpenDyslexic, SIL Open Font Licence —
+   see fonts/OpenDyslexic-LICENSE.txt). The "Aa" button in the nav adds
+   .dyslexic to <html>; the choice is remembered in localStorage. The
+   font files only download once someone switches it on.
+   ========================================================= */
+@font-face{font-family:"OpenDyslexic";font-style:normal;font-weight:400;font-display:swap;src:url(fonts/opendyslexic-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"OpenDyslexic";font-style:italic;font-weight:400;font-display:swap;src:url(fonts/opendyslexic-latin-400-italic.woff2) format("woff2")}
+@font-face{font-family:"OpenDyslexic";font-style:normal;font-weight:700;font-display:swap;src:url(fonts/opendyslexic-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"OpenDyslexic";font-style:italic;font-weight:700;font-display:swap;src:url(fonts/opendyslexic-latin-700-italic.woff2) format("woff2")}
+:root.dyslexic{
+  --serif:"OpenDyslexic",Verdana,sans-serif;
+  --sans:"OpenDyslexic",Verdana,sans-serif;
+}
+.font-toggle .aa{font:700 .95rem/1 Verdana,Geneva,sans-serif;letter-spacing:-.02em}
+:root.dyslexic .font-toggle{background:rgba(138,90,43,.2)}
+/* The logo is artwork: it keeps its typeface. */
+.dyslexic .brand{font-family:"Cormorant Garamond",Georgia,serif}
 </style>
 </head>
 <body>
@@ -187,6 +210,9 @@ ol.steps li{margin-bottom:.7em}
       <li><a href="submit.html" aria-current="page">Write for us</a></li>
       <li><a href="index.html#contact">Contact</a></li>
     </ul>
+      <button class="theme-toggle font-toggle" id="fontToggle" type="button" aria-pressed="false" aria-label="Dyslexia-friendly font (OpenDyslexic)" title="Dyslexia-friendly font">
+        <span class="aa" aria-hidden="true">Aa</span>
+      </button>
       <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to dark theme" aria-pressed="false">
         <svg class="icon-moon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
         <svg class="icon-sun" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.6M12 18.9v2.6M4.2 12H1.6M22.4 12h-2.6M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
@@ -285,6 +311,23 @@ ol.steps li{margin-bottom:.7em}
     var next = current === "dark" ? "light" : "dark";
     apply(next);
     try{ localStorage.setItem(KEY, next); }catch(e){}
+  });
+})();
+
+(function(){
+  "use strict";
+  var KEY = "compass-dyslexic";
+  var toggle = document.getElementById("fontToggle");
+  var root = document.documentElement;
+  var show = function(on){
+    root.classList.toggle("dyslexic", on);
+    toggle.setAttribute("aria-pressed", String(on));
+  };
+  show(root.classList.contains("dyslexic"));
+  toggle.addEventListener("click", function(){
+    var on = !root.classList.contains("dyslexic");
+    show(on);
+    try{ localStorage.setItem(KEY, on ? "on" : "off"); }catch(e){ /* private mode etc. */ }
   });
 })();
 </script>
