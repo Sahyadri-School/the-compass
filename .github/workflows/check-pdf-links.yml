@@ -1,7 +1,8 @@
 name: Check issue PDF links
 
 # Runs weekly, plus on demand. Separate from the deploy workflow because
-# this checks EXTERNAL links (the Google-Drive-hosted issue PDFs), which
+# this makes real network requests for every issue's PDF (hosted in pdfs/,
+# or on an external site like Google Drive if an issue ever points there), which
 # deploy-pages.yml deliberately doesn't -- that one only checks internal
 # page links, offline, so a slow/unreachable third-party site can't make
 # an unrelated deploy fail.

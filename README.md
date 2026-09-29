@@ -45,7 +45,7 @@ PDF file names must match the `file` entries in the `ISSUES` list near the botto
 - Site deploys are handled by `.github/workflows/deploy-pages.yml` — GitHub Pages is set to "Deploy from GitHub Actions" in **Settings → Pages**, not "Deploy from a branch".
 - Every push runs a `checks` job first: an internal-link checker and a Lighthouse CI report (accessibility/performance). Both are informational — neither blocks a deploy — so check the Actions run summary occasionally for anything they flag.
 - Issue templates live in `.github/ISSUE_TEMPLATE/` — bug reports and content-correction suggestions get a structured form; the config also points people submitting *articles* to `submit.html` instead.
-- **`.github/workflows/check-pdf-links.yml`** runs every Monday (and on demand, via the Actions tab) and checks that every issue's PDF is actually still reachable — this catches things the internal link checker above can't, since issue files are hosted externally (Google Drive), not tracked by git. If any link is broken (revoked share permissions, a deleted/moved file), it automatically opens a GitHub issue listing which ones, and closes that issue automatically once everything passes again on a later run.
+- **`.github/workflows/check-pdf-links.yml`** runs every Monday (and on demand, via the Actions tab) and checks that every issue's PDF is actually being served — it requests each file's address and flags anything that fails or comes back as a web page instead of a PDF. The PDFs live in the `pdfs/` folder and are deployed with the site, so this mostly catches a file missing from a deploy or a wrong file name in an issue's entry; it would equally catch a broken link if an issue were ever pointed at an external host (e.g. Google Drive) instead. If anything is broken, it automatically opens a GitHub issue listing which ones, and closes that issue automatically once everything passes again on a later run.
 - See [CONTRIBUTING.md](CONTRIBUTING.md) for the day-to-day editing workflow.
 
 ## Publishing on GitHub Pages
@@ -61,6 +61,7 @@ GitHub has file-size limits that matter for a magazine archive:
 
 - **Uploading through the GitHub website is limited to 25 MB per file.** A 45 MB PDF must be added with **GitHub Desktop** or the `git` command line instead.
 - GitHub warns about files over 50 MB and **refuses files over 100 MB**.
+- **Every version of a PDF stays in git's history.** Replacing an issue with a corrected PDF adds its full size to the repository again (the old copy remains in history). Fine for the odd correction; avoid re-uploading large files repeatedly. Total across all current issues: about 100 MB.
 - Don't use Git LFS for the PDFs: GitHub Pages doesn't serve LFS files.
 - A GitHub Pages site should stay under about 1 GB in total.
 

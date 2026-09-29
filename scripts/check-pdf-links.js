@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 // Checks that every issue's PDF link is actually reachable and returns a
 // PDF -- not an HTML error/interstitial page -- catching problems the
-// normal (offline, internal-only) link checker can't see: a Google Drive
-// share link being revoked, a file being deleted or moved, or sharing
-// permissions changing.
+// normal (offline, internal-only) link checker can't see: a PDF missing from
+// a deploy or misnamed in an issue's entry, or -- if an issue ever points at
+// an external host such as Google Drive -- a share link being revoked, a file
+// being deleted or moved, or sharing permissions changing.
 //
 // Run on a schedule by .github/workflows/check-pdf-links.yml, which opens
 // or updates a GitHub issue if anything's broken.
