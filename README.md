@@ -10,6 +10,7 @@ The core site is a single file, `index.html` — no build step, runs on GitHub P
 the-compass/
 ├── .github/
 │   ├── workflows/deploy-pages.yml    ← builds & deploys to Pages, runs checks
+│   ├── workflows/check-pdf-links.yml ← weekly: checks issue PDFs are still reachable
 │   └── ISSUE_TEMPLATE/               ← bug report & content suggestion forms
 ├── .pages.yml                     ← Pages CMS config (see "Adding a new issue")
 ├── index.html
@@ -20,7 +21,8 @@ the-compass/
 ├── CONTRIBUTING.md                ← workflow notes for editors
 ├── README.md
 ├── scripts/
-│   └── build-issues-index.js      ← combines data/issues/* into data/issues.json
+│   ├── build-issues-index.js      ← combines data/issues/* into data/issues.json
+│   └── check-pdf-links.js         ← checks issue PDFs are still reachable
 ├── data/
 │   ├── issues.json                ← GENERATED — don't edit directly, see below
 │   └── issues/                    ← the real source: one file per issue
@@ -43,6 +45,7 @@ PDF file names must match the `file` entries in the `ISSUES` list near the botto
 - Site deploys are handled by `.github/workflows/deploy-pages.yml` — GitHub Pages is set to "Deploy from GitHub Actions" in **Settings → Pages**, not "Deploy from a branch".
 - Every push runs a `checks` job first: an internal-link checker and a Lighthouse CI report (accessibility/performance). Both are informational — neither blocks a deploy — so check the Actions run summary occasionally for anything they flag.
 - Issue templates live in `.github/ISSUE_TEMPLATE/` — bug reports and content-correction suggestions get a structured form; the config also points people submitting *articles* to `submit.html` instead.
+- **`.github/workflows/check-pdf-links.yml`** runs every Monday (and on demand, via the Actions tab) and checks that every issue's PDF is actually still reachable — this catches things the internal link checker above can't, since issue files are hosted externally (Google Drive), not tracked by git. If any link is broken (revoked share permissions, a deleted/moved file), it automatically opens a GitHub issue listing which ones, and closes that issue automatically once everything passes again on a later run.
 - See [CONTRIBUTING.md](CONTRIBUTING.md) for the day-to-day editing workflow.
 
 ## Publishing on GitHub Pages

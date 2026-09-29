@@ -1,0 +1,118 @@
+name: Check issue PDF links
+
+# Runs weekly, plus on demand. Separate from the deploy workflow because
+# this checks EXTERNAL links (the Google-Drive-hosted issue PDFs), which
+# deploy-pages.yml deliberately doesn't -- that one only checks internal
+# page links, offline, so a slow/unreachable third-party site can't make
+# an unrelated deploy fail.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"   # every Monday, 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Check PDF links
+        continue-on-error: true
+        run: node scripts/check-pdf-links.js
+
+      - name: Read report
+        id: report
+        if: always()
+        run: |
+          echo "broken_count=$(node -e "console.log(JSON.parse(require('fs').readFileSync('link-check-report.json')).broken.length)")" >> "$GITHUB_OUTPUT"
+
+      - name: Open or update an issue if any links are broken
+        if: always() && steps.report.outputs.broken_count != '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = JSON.parse(fs.readFileSync('link-check-report.json', 'utf8'));
+            const broken = report.broken;
+            const title = 'Broken issue PDF link(s) detected';
+
+            const body = [
+              `**${broken.length} issue PDF link(s) appear to be broken**, checked ${report.checkedAt}.`,
+              '',
+              ...broken.map(b =>
+                `- **Volume ${b.id}**: ${b.url}\n  - status: ${b.status ?? 'network error'}` +
+                `${b.error ? ` (${b.error})` : ''}${b.contentType ? `, content-type: \`${b.contentType}\`` : ''}`
+              ),
+              '',
+              "This usually means a Google Drive share link was revoked, the file was moved or deleted, or its sharing permissions changed (set to \"Anyone with the link\" is required). Check the issue in Pages CMS and fix the link, or re-upload the PDF.",
+              '',
+              '_This issue is filed and updated automatically by the weekly link-check workflow. It closes itself automatically once every link passes again -- no need to close it by hand.'
+            ].join('\n');
+
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'broken-link'
+            });
+            const match = existing.find(i => i.title === title);
+
+            if (match) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                body
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['broken-link']
+              });
+            }
+
+      - name: Close the tracking issue if everything's healthy again
+        if: always() && steps.report.outputs.broken_count == '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = 'Broken issue PDF link(s) detected';
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'broken-link'
+            });
+            const match = existing.find(i => i.title === title);
+            if (match) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                body: 'All issue PDF links passed on the latest check -- closing.'
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                state: 'closed'
+              });
+            }
+
+      - name: Fail the run if links are broken
+        if: steps.report.outputs.broken_count != '0'
+        run: exit 1
