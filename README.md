@@ -129,7 +129,7 @@ python3 -m http.server 8000
 
 This repo carries two separate licenses, since the code and the magazine content are different kinds of thing:
 
-- **The website's code** (HTML/CSS/JS) — [MIT](LICENSE). Reuse it for your own site freely.
+- **The website's code** (HTML/CSS/JS) — [MIT](LICENSE). Reuse it for your own site freely. The MIT license covers the code only, not the magazine content below; `LICENSE` is kept as the unmodified standard MIT text so GitHub can recognize it.
 - **The magazine content** (issues, articles, PDFs) — [CC BY-NC-SA 4.0](LICENSE-CONTENT.md). Teachers and students can freely download, print, share, and build on it with credit, for non-commercial use.
 
 The CC license is also linked in the site's footer and on the submissions page, so contributors and readers see it without having to dig through this repo.
