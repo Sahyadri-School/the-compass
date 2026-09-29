@@ -117,11 +117,13 @@ The Archive section has a search box that filters issues live by volume, month, 
 
 ## Testing on your own computer
 
-Opening `index.html` by double-clicking works, but file sizes and the download progress bar only appear when the site is served from a web address. To preview properly, run this in the folder and open `http://localhost:8000`:
+**Don't just double-click `index.html`** — the issue list is loaded from `data/issues.json` at runtime, and browsers block that kind of file access on pages opened straight from disk, so you'd see "No issues published yet" even though there are issues. Serve the folder from a local web address instead: run this in the folder and open `http://localhost:8000`:
 
 ```
 python3 -m http.server 8000
 ```
+
+(Note: `data/issues.json` is generated from `data/issues/` by `scripts/build-issues-index.js` — if you've added or edited an issue file locally, run `node scripts/build-issues-index.js` first so the preview reflects it. On the live site that step happens automatically on every deploy.)
 
 ## License
 
@@ -138,4 +140,7 @@ The CC license is also linked in the site's footer and on the submissions page, 
 - Antique world map: d3 and Natural Earth data, drawn with engraved coastlines and portolan rhumb lines.
 - Fonts: Cormorant Garamond (headings) and Source Sans 3 (body text), from Google Fonts.
 - Accessibility: works with keyboard and screen readers, and respects the "reduce motion" setting. If 3D isn't available, a flat compass is shown instead.
+- Dyslexia-friendly font: an "Aa" button in the nav (next to the theme toggle) switches all text to [OpenDyslexic](https://opendyslexic.org/), self-hosted in `fonts/` (SIL Open Font License — see `fonts/OpenDyslexic-LICENSE.txt`). The choice is remembered in `localStorage`, and the font files (~460 KB) only download if someone switches it on. The logo and hero title keep their normal typeface, like the issue covers.
+- Fluid sizing: the root font size scales smoothly with screen width (13px → 16px between 320px and 375px wide, full size above that). Since all text and icon/image sizes are in `rem`, everything scales together on very narrow phones instead of jumping at breakpoints — typical phones (375px+) are unaffected.
+- Issue downloads: each issue has a **Download** button and a **Read online** link (opens the PDF's viewer in a new tab). Issues hosted on another site (like Google Drive) skip the in-page progress bar, since browsers don't let a page read files from other sites' servers, and fall back to a normal browser download.
 - Dark mode: a toggle in the nav (moon/sun icon) switches the site's reading chrome — nav, sections, footer, forms — between light and dark. It defaults to the visitor's OS preference and remembers their choice via `localStorage`. The hero (compass + map) stays the same in both themes by design, like a book's cover art.
