@@ -16,7 +16,7 @@ body:
     attributes:
       label: Page or URL
       description: Which page were you on?
-      placeholder: e.g. https://sahyadri-archives.github.io/the-compass/#archive
+      placeholder: e.g. https://sahyadri-school.github.io/the-compass/#archive
     validations:
       required: false
   - type: input

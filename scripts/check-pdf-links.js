@@ -13,7 +13,7 @@ const path = require("path");
 
 const ISSUES_DIR = path.join(__dirname, "..", "data", "issues");
 const REPORT_FILE = path.join(__dirname, "..", "link-check-report.json");
-const SITE_ORIGIN = "https://sahyadri-archives.github.io/the-compass";
+const SITE_ORIGIN = "https://sahyadri-school.github.io/the-compass";
 
 function isExternal(file){
   return /^https?:\/\//i.test(file);

@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://sahyadri-archives.github.io/the-compass/sitemap.xml
+Sitemap: https://sahyadri-school.github.io/the-compass/sitemap.xml

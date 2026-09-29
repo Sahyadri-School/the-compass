@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        For submitting an **article or piece of writing** to the magazine itself, please use the [submissions page](https://sahyadri-archives.github.io/the-compass/submit.html) instead — this form is for corrections or suggestions about the *website's* content (typos, broken links, outdated info, etc).
+        For submitting an **article or piece of writing** to the magazine itself, please use the [submissions page](https://sahyadri-school.github.io/the-compass/submit.html) instead — this form is for corrections or suggestions about the *website's* content (typos, broken links, outdated info, etc).
   - type: textarea
     id: details
     attributes:

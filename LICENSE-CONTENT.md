@@ -36,7 +36,7 @@ Full legal text: <https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode>
 ## For contributors
 
 By submitting a piece to *The Compass* (see [submit.html](submit.html) /
-the live [submissions page](https://sahyadri-archives.github.io/the-compass/submit.html)),
+the live [submissions page](https://sahyadri-school.github.io/the-compass/submit.html)),
 you agree to it being published under this license once accepted. You keep
 your copyright — this just sets the terms under which readers can use
 your published piece.
