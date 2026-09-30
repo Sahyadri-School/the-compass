@@ -11,11 +11,12 @@
 //
 // Flag: --with-previews
 //   Also folds in the images made by scripts/build-previews.js: for each
-//   issue that has a previews/<id>/ folder it adds `preview: { pages: N }`
-//   and, unless the issue already sets its own `cover`, points `cover` at
-//   previews/<id>/cover.jpg. The deploy workflow passes this flag. It is
-//   opt-in so the committed data/issues.json never refers to images that
-//   only exist after a deploy (the previews folder is not in git).
+//   issue that has a previews/<id>/ folder it adds
+//   `preview: { pages, front }` (page count, and how many front-matter pages
+//   come before the body's page 1) and, unless the issue already sets its own
+//   `cover`, points `cover` at previews/<id>/cover.jpg. The deploy workflow
+//   passes this flag. It is opt-in so the committed data/issues.json never
+//   refers to images that only exist after a deploy (previews/ is not in git).
 
 const fs = require("fs");
 const path = require("path");
@@ -56,9 +57,10 @@ function main(){
     for (const is of issues){
       const dir = path.join(PREVIEWS_DIR, String(is.id));
       if (!fs.existsSync(dir)) continue;
-      const pages = fs.readdirSync(dir).filter(f => /^\d+\.jpg$/.test(f)).length;
-      if (!pages) continue;
-      is.preview = { pages };
+      let meta;
+      try{ meta = JSON.parse(fs.readFileSync(path.join(dir, "meta.json"), "utf8")); }catch(e){ continue; }
+      if (!meta.pages || !fs.existsSync(path.join(dir, `${meta.pages}.jpg`))) continue;   // incomplete -> leave the issue without a preview
+      is.preview = { pages: meta.pages, front: meta.front || 0 };
       if (!is.cover && fs.existsSync(path.join(dir, "cover.jpg"))) is.cover = `previews/${is.id}/cover.jpg`;
       n++;
     }

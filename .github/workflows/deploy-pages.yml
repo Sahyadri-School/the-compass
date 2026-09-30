@@ -62,16 +62,37 @@ jobs:
         with:
           node-version: "20"
 
-      # Renders each PDF's cover and front-matter pages to JPEGs for the
-      # cover previews (see scripts/build-previews.js). continue-on-error:
-      # if this fails for any reason the deploy still goes ahead, and the
-      # site simply falls back to its generated covers with no Preview button.
-      - name: Generate cover and preview images from the PDFs
+      # Renders every page of each PDF to a JPEG for the covers and the page
+      # viewer (see scripts/build-previews.js). That takes about a minute, so
+      # the result is cached and only redone when a PDF (or the script)
+      # changes -- a typo fix in the README doesn't re-render 1,500+ pages.
+      #
+      # continue-on-error: if generation fails for any reason the deploy still
+      # goes ahead, and the site simply falls back to its drawn covers with no
+      # Preview button. The cache is saved only when generation fully
+      # succeeded, so a partial failure can never get locked in.
+      - name: Restore cached previews
+        id: previews-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: previews
+          key: previews-${{ hashFiles('pdfs/*.pdf', 'scripts/build-previews.js') }}
+
+      - name: Generate cover and page images from the PDFs
+        id: previews-build
+        if: steps.previews-cache.outputs.cache-hit != 'true'
         continue-on-error: true
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq poppler-utils
           node scripts/build-previews.js
+
+      - name: Save previews to the cache
+        if: steps.previews-build.outcome == 'success'
+        uses: actions/cache/save@v4
+        with:
+          path: previews
+          key: previews-${{ hashFiles('pdfs/*.pdf', 'scripts/build-previews.js') }}
 
       - name: Build issues.json from data/issues/
         run: node scripts/build-issues-index.js --with-previews

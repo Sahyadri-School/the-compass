@@ -37,8 +37,8 @@ media:
     categories: [document]
   # issue-covers: kept for advanced use (see README "Option B" — hand-
   # editing an issue's file to add a real cover image) but not exposed as
-  # a field below: the deploy renders each issue's cover (and a preview of
-  # its contents pages) from page 1 of the PDF automatically — see
+  # a field below: the deploy renders each issue's cover (and a page-by-page
+  # viewer of the whole issue) from the PDF automatically — see
   # scripts/build-previews.js. A `cover` set by hand still takes priority.
   - name: issue-covers
     label: Issue covers

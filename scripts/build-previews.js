@@ -1,39 +1,45 @@
 #!/usr/bin/env node
-// Renders a cover thumbnail and a short "preview" of each locally hosted
-// issue PDF to JPEG files, so the site can show the real cover and let
-// visitors flip through the front matter (cover, statement of intent,
-// contents) before deciding to download a 10-20 MB file.
+// Renders every page of each locally hosted issue PDF to a JPEG, so the site
+// can show the real cover and let visitors read through the whole issue in
+// the page viewer without downloading a 10-20 MB file first.
 //
-// Output (not committed -- regenerated on every deploy, so it always
+// Output (not committed -- regenerated when a PDF changes, so it always
 // matches the current PDF, including corrected versions):
 //   previews/<id>/cover.jpg        small cover for the archive / current issue
-//   previews/<id>/1.jpg ... N.jpg  preview pages, in reading order
+//   previews/<id>/1.jpg ... N.jpg  every page, in order
+//   previews/<id>/meta.json        { pages: N, front: F }
 //
-// How many pages count as "front matter": these magazines number the
-// front matter in roman numerals (ii, iii, iv ...) and start the body at
-// page "1", so the preview runs from the cover up to the page before the
-// first page numbered 1 (clamped to 3-8 pages). If that can't be worked
-// out, it falls back to the first 4 pages.
+// `front` is how many front-matter pages come before the body's page "1".
+// These magazines number the front matter in roman numerals (the cover is
+// unnumbered) and start the body at page 1, so the viewer can show the same
+// page numbers the printed contents use. It's read from the footers of the
+// first 14 pages; if it can't be worked out, front = 0 and the viewer just
+// numbers pages 1..N.
 //
-// Needs poppler's command line tools (pdftoppm, pdftotext):
+// Needs poppler's command line tools (pdftoppm, pdftotext, pdfinfo):
 //   Ubuntu/Debian: sudo apt-get install poppler-utils     macOS: brew install poppler
 //
 // Run by .github/workflows/deploy-pages.yml before issues.json is built.
-// An issue whose PDF can't be rendered is skipped (the site then falls
-// back to its generated cover and shows no Preview button for it).
+// An issue whose PDF can't be rendered is skipped (the site then keeps its
+// drawn cover and shows no Preview tag for it).
 
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
-const { execFileSync } = require("child_process");
+const { execFile, execFileSync } = require("child_process");
+const { promisify } = require("util");
+const run = promisify(execFile);
 
 const ROOT = path.join(__dirname, "..");
 const ISSUES_DIR = path.join(ROOT, "data", "issues");
 const OUT_DIR = path.join(ROOT, "previews");
 
-const PAGE_WIDTH = 720;      // px, preview pages (wide enough to read the contents)
+const PAGE_WIDTH = 720;      // px -- sharp enough to read body text and formulas
 const COVER_WIDTH = 420;     // px, thumbnail cover
-const JPEG_OPTS = "quality=72,progressive=y,optimize=y";
-const MIN_PAGES = 3, MAX_PAGES = 8, FALLBACK_PAGES = 4, SCAN_LIMIT = 14;
+const JPEG_OPTS = "quality=70,progressive=y,optimize=y";
+const SCAN_PAGES = 14;       // how far into the PDF to look for where the body starts
+const CONCURRENCY = Math.max(1, Math.min(4, os.cpus().length));
+const BIG = { maxBuffer: 64 * 1024 * 1024 };
 
 const isRemote = f => /^https?:\/\//i.test(f);
 
@@ -42,12 +48,8 @@ function haveTool(cmd){
   catch(e){ return e.code !== "ENOENT"; }   // poppler tools print their version and may exit non-zero
 }
 
-function pageText(pdf, p){
-  return execFileSync("pdftotext", ["-f", String(p), "-l", String(p), pdf, "-"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
-}
-
 // The printed page number in a page's footer: "... Page iii" / "Page 12",
-// or a bare numeral on its own last line.
+// or a bare numeral on the page's last line.
 function printedNumber(text){
   const withWord = [...text.matchAll(/Page\s+([ivxlc]+|\d+)/gi)];
   if (withWord.length) return withWord[withWord.length - 1][1];
@@ -57,25 +59,55 @@ function printedNumber(text){
   return bare ? bare[1] : null;
 }
 
-function frontMatterPages(pdf){
-  for (let p = 2; p <= SCAN_LIMIT; p++){
-    let text;
-    try{ text = pageText(pdf, p); }catch(e){ break; }          // ran past the end of a very short PDF
-    if (printedNumber(text) === "1") return Math.min(MAX_PAGES, Math.max(MIN_PAGES, p - 1));
+async function pageCount(pdf){
+  const { stdout } = await run("pdfinfo", [pdf]);
+  const m = /^Pages:\s+(\d+)/m.exec(stdout);
+  if (!m) throw new Error("could not read the page count");
+  return +m[1];
+}
+
+async function frontMatterLength(pdf, total){
+  const { stdout } = await run("pdftotext", ["-f", "1", "-l", String(Math.min(SCAN_PAGES, total)), pdf, "-"], BIG);
+  const pages = stdout.split("\f");
+  for (let i = 1; i < pages.length; i++)                       // pages[i] is PDF page i+1; the cover (page 1) is never numbered
+    if (printedNumber(pages[i]) === "1") return i;             // i pages come before the body's page 1
+  return 0;
+}
+
+async function renderIssue(is){
+  const pdf = path.join(ROOT, is.file);
+  const tmp = path.join(OUT_DIR, `${is.id}.tmp`), final = path.join(OUT_DIR, String(is.id));
+  fs.rmSync(tmp, { recursive: true, force: true });
+  fs.mkdirSync(tmp, { recursive: true });
+  try{
+    const total = await pageCount(pdf);
+    const front = await frontMatterLength(pdf, total);
+
+    // every page in one pass (faster than one process per page)
+    await run("pdftoppm", ["-jpeg", "-jpegopt", JPEG_OPTS, "-scale-to-x", String(PAGE_WIDTH), "-scale-to-y", "-1", pdf, path.join(tmp, "p")], BIG);
+    for (const f of fs.readdirSync(tmp)){                      // poppler names them p-001.jpg ...; we want 1.jpg ...
+      const m = /^p-(\d+)\.jpg$/.exec(f);
+      if (m) fs.renameSync(path.join(tmp, f), path.join(tmp, `${parseInt(m[1], 10)}.jpg`));
+    }
+    await run("pdftoppm", ["-jpeg", "-jpegopt", JPEG_OPTS, "-f", "1", "-l", "1", "-singlefile", "-scale-to-x", String(COVER_WIDTH), "-scale-to-y", "-1", pdf, path.join(tmp, "cover")], BIG);
+
+    const made = fs.readdirSync(tmp).filter(f => /^\d+\.jpg$/.test(f)).length;
+    if (made !== total) throw new Error(`rendered ${made} of ${total} pages`);
+    fs.writeFileSync(path.join(tmp, "meta.json"), JSON.stringify({ pages: total, front }) + "\n");
+
+    fs.rmSync(final, { recursive: true, force: true });
+    fs.renameSync(tmp, final);                                 // only appears once fully written
+    const bytes = fs.readdirSync(final).reduce((s, f) => s + fs.statSync(path.join(final, f)).size, 0);
+    return { ok: true, id: is.id, total, front, bytes };
+  }catch(e){
+    fs.rmSync(tmp, { recursive: true, force: true });
+    return { ok: false, id: is.id, error: String(e.stderr || e.message).trim().slice(0, 200) };
   }
-  return FALLBACK_PAGES;
 }
 
-function render(pdf, page, width, outBase){
-  execFileSync("pdftoppm", [
-    "-jpeg", "-jpegopt", JPEG_OPTS, "-f", String(page), "-l", String(page),
-    "-singlefile", "-scale-to-x", String(width), "-scale-to-y", "-1", pdf, outBase
-  ], { stdio: ["ignore", "ignore", "pipe"] });
-}
-
-function main(){
-  if (!haveTool("pdftoppm") || !haveTool("pdftotext")){
-    console.error("pdftoppm/pdftotext not found. Install poppler (Ubuntu: sudo apt-get install poppler-utils, macOS: brew install poppler).");
+async function main(){
+  if (!haveTool("pdftoppm") || !haveTool("pdftotext") || !haveTool("pdfinfo")){
+    console.error("poppler tools not found. Install poppler (Ubuntu: sudo apt-get install poppler-utils, macOS: brew install poppler).");
     process.exitCode = 1;
     return;
   }
@@ -84,35 +116,32 @@ function main(){
   fs.rmSync(OUT_DIR, { recursive: true, force: true });
   fs.mkdirSync(OUT_DIR, { recursive: true });
 
-  const issues = fs.readdirSync(ISSUES_DIR).filter(f => f.endsWith(".json")).map(f => {
-    try{ return JSON.parse(fs.readFileSync(path.join(ISSUES_DIR, f), "utf8")); }
-    catch(e){ console.error(`Skipping ${f}: ${e.message}`); return null; }
-  }).filter(Boolean);
-
-  let failed = 0, done = 0, totalBytes = 0;
-  for (const is of issues){
+  const todo = [];
+  for (const f of fs.readdirSync(ISSUES_DIR).filter(f => f.endsWith(".json"))){
+    let is;
+    try{ is = JSON.parse(fs.readFileSync(path.join(ISSUES_DIR, f), "utf8")); }
+    catch(e){ console.error(`Skipping ${f}: ${e.message}`); continue; }
     if (!is.file || isRemote(is.file)) { console.log(`  skip  ${is.id}  (not a local PDF)`); continue; }
-    const pdf = path.join(ROOT, is.file);
-    if (!fs.existsSync(pdf)) { console.error(`  MISSING ${is.id}  ${is.file}`); failed++; continue; }
-
-    const tmp = path.join(OUT_DIR, `${is.id}.tmp`), final = path.join(OUT_DIR, String(is.id));
-    try{
-      fs.mkdirSync(tmp, { recursive: true });
-      const n = frontMatterPages(pdf);
-      render(pdf, 1, COVER_WIDTH, path.join(tmp, "cover"));
-      for (let p = 1; p <= n; p++) render(pdf, p, PAGE_WIDTH, path.join(tmp, String(p)));
-      fs.renameSync(tmp, final);                              // only appears once fully written
-      const bytes = fs.readdirSync(final).reduce((s, f) => s + fs.statSync(path.join(final, f)).size, 0);
-      totalBytes += bytes; done++;
-      console.log(`  ok    ${is.id}  ${n} preview pages + cover  (${(bytes / 1024).toFixed(0)} KB)`);
-    }catch(e){
-      fs.rmSync(tmp, { recursive: true, force: true });
-      console.error(`  FAIL  ${is.id}  ${String(e.stderr || e.message).trim().slice(0, 160)}`);
-      failed++;
-    }
+    if (!fs.existsSync(path.join(ROOT, is.file))) { console.error(`  MISSING ${is.id}  ${is.file}`); process.exitCode = 1; continue; }
+    todo.push(is);
   }
-  console.log(`\nPreviews built for ${done} issue(s), ${(totalBytes / 1048576).toFixed(1)} MB total${failed ? `, ${failed} failed` : ""}.`);
-  if (failed) process.exitCode = 1;
+
+  const results = [];
+  let next = 0;
+  await Promise.all(Array.from({ length: CONCURRENCY }, async () => {
+    while (next < todo.length){
+      const r = await renderIssue(todo[next++]);
+      results.push(r);
+      console.log(r.ok
+        ? `  ok    ${r.id}  ${r.total} pages (front matter ${r.front})  ${(r.bytes / 1048576).toFixed(1)} MB`
+        : `  FAIL  ${r.id}  ${r.error}`);
+    }
+  }));
+
+  const ok = results.filter(r => r.ok), bad = results.filter(r => !r.ok);
+  const pages = ok.reduce((s, r) => s + r.total, 0), mb = ok.reduce((s, r) => s + r.bytes, 0) / 1048576;
+  console.log(`\nRendered ${pages} pages for ${ok.length} issue(s), ${mb.toFixed(0)} MB total${bad.length ? `, ${bad.length} failed` : ""}.`);
+  if (bad.length) process.exitCode = 1;
 }
 
 main();

@@ -22,7 +22,7 @@ the-compass/
 ├── README.md
 ├── scripts/
 │   ├── build-issues-index.js      ← combines data/issues/* into data/issues.json
-│   ├── build-previews.js          ← renders each PDF's cover + first pages to JPEGs (at deploy)
+│   ├── build-previews.js          ← renders every page of each PDF to JPEGs (at deploy)
 │   └── check-pdf-links.js         ← checks issue PDFs are still reachable
 ├── data/
 │   ├── issues.json                ← GENERATED — don't edit directly, see below
@@ -112,13 +112,19 @@ Issues can be added in any order — the website works out which is the current 
 
 ## Covers and previews
 
-Each issue's cover on the site is **page 1 of its PDF**, and clicking a cover (there's a small "Preview" tag on it) opens a viewer where visitors can flip through the issue's front matter — cover, statement of intent and the "Articles in this issue" contents — before deciding to download a 10–20 MB file. Arrow keys, on-screen buttons and swiping all work.
+Each issue's cover on the site is **page 1 of its PDF**, and clicking a cover (there's a small "Preview" tag on it) opens a viewer where visitors can **read the entire issue**, page by page, without downloading the 10–20 MB file first.
 
-Nothing needs uploading: `scripts/build-previews.js` renders these JPEGs from the PDFs **on every deploy** (about 3 MB in total, loaded only when someone opens a preview), so they always match the current PDF — including a corrected re-upload — and stay out of git. It works out how many pages count as front matter by reading the printed page numbers (roman numerals until the body starts at page 1), and falls back to the first four pages if it can't.
+- **Page numbers match the printed ones.** These magazines number the front matter in roman numerals (the cover is unnumbered) and start the body at page 1, so the viewer shows "Cover", "Page iii (front matter)", then "Page 1 of 206", … — which means "page 39" in the printed contents is page 39 in the viewer.
+- **Getting around:** the ‹ › buttons, the left/right arrow keys, swiping on a phone, Home/End for the first/last page, and a **Go to page** box (type a printed page number, e.g. from the contents).
+- The one way to *save* an issue is still the **Download** button.
 
-- **If generation ever fails** the deploy still goes ahead: that issue just shows the old drawn placeholder cover and no Preview tag.
-- **Issues hosted on another site** (a `file` that's a full `https://…` address) aren't rendered — they keep the drawn cover.
-- **Trying it on your own computer** needs poppler (`sudo apt-get install poppler-utils`, or `brew install poppler`):
+**Nothing needs uploading.** `scripts/build-previews.js` renders every page of every PDF to a JPEG during the deploy (about 1,600 pages, ~110 MB, roughly a minute), so the viewer always matches the current PDF — including a corrected re-upload — and the images stay out of git. Visitors only load the pages they actually look at (~60 KB each). It works out where the body starts by reading the printed page numbers in the footers, and falls back to plain 1…N numbering if it can't.
+
+- **It's cached.** The deploy re-renders only when a PDF (or the script) changes; an ordinary edit reuses the cached images, so it costs seconds, not a minute. The cache is saved only after a fully successful render.
+- **If generation ever fails** the deploy still goes ahead: the site just keeps the old drawn placeholder covers and shows no Preview tag.
+- **It roughly doubles the size of the published site** (about 100 MB of PDFs plus about 110 MB of page images). That's comfortably inside GitHub Pages' 1 GB limit. If it ever needs to shrink, `PAGE_WIDTH` and `JPEG_OPTS` at the top of the script trade sharpness for size (at 640 px wide the images would be about 20% smaller).
+- **Issues hosted on another site** (a `file` that's a full `https://…` address) aren't rendered — they keep the drawn cover and have no viewer.
+- **Trying it on your own computer** needs poppler (`sudo apt-get install poppler-utils`, or `brew install poppler`) and about 110 MB of disk space:
 
   ```
   node scripts/build-previews.js
@@ -163,6 +169,6 @@ The CC license is also linked in the site's footer and on the submissions page, 
 - Accessibility: works with keyboard and screen readers, and respects the "reduce motion" setting. If 3D isn't available, a flat compass is shown instead.
 - Dyslexia-friendly font: an "Aa" button in the nav (next to the theme toggle) switches all text to [OpenDyslexic](https://opendyslexic.org/), self-hosted in `fonts/` (SIL Open Font License — see `fonts/OpenDyslexic-LICENSE.txt`). The choice is remembered in `localStorage`, and the font files (~460 KB) only download if someone switches it on. The logo and hero title keep their normal typeface, like the issue covers.
 - Fluid sizing: the root font size scales smoothly with screen width (13px → 16px between 320px and 375px wide, full size above that). Since all text and icon/image sizes are in `rem`, everything scales together on very narrow phones instead of jumping at breakpoints — typical phones (375px+) are unaffected.
-- Cover previews: covers come from each PDF's first page, and clicking one opens a page-by-page preview of the front matter and contents (see "Covers and previews" above).
-- Issue downloads: each issue has a **Download** button and a **Read online** link (opens the PDF's viewer in a new tab). Issues hosted on another site (like Google Drive) skip the in-page progress bar, since browsers don't let a page read files from other sites' servers, and fall back to a normal browser download.
+- Cover previews: covers come from each PDF's first page, and clicking one opens a page-by-page viewer for the whole issue (see "Covers and previews" above).
+- Issue downloads: each issue has a **Download** button. Issues hosted on another site (like Google Drive) skip the in-page progress bar, since browsers don't let a page read files from other sites' servers, and fall back to a normal browser download.
 - Dark mode: a toggle in the nav (moon/sun icon) switches the site's reading chrome — nav, sections, footer, forms — between light and dark. It defaults to the visitor's OS preference and remembers their choice via `localStorage`. The hero (compass + map) stays the same in both themes by design, like a book's cover art.
