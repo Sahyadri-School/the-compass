@@ -62,8 +62,19 @@ jobs:
         with:
           node-version: "20"
 
+      # Renders each PDF's cover and front-matter pages to JPEGs for the
+      # cover previews (see scripts/build-previews.js). continue-on-error:
+      # if this fails for any reason the deploy still goes ahead, and the
+      # site simply falls back to its generated covers with no Preview button.
+      - name: Generate cover and preview images from the PDFs
+        continue-on-error: true
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq poppler-utils
+          node scripts/build-previews.js
+
       - name: Build issues.json from data/issues/
-        run: node scripts/build-issues-index.js
+        run: node scripts/build-issues-index.js --with-previews
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

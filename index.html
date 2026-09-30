@@ -435,6 +435,65 @@ section[id]{scroll-margin-top:calc(var(--nav-h) + 12px)}
   box-shadow:0 1px 0 rgba(58,37,19,.2),0 10px 18px -10px rgba(58,37,19,.6);
 }
 .thumb svg,.thumb img{display:block;width:100%;height:100%;object-fit:cover}
+
+/* =========================================================
+   Cover preview: the clickable cover + the viewer dialog.
+   Sizes are in rem so they scale with the fluid root size.
+   ========================================================= */
+.cover-btn{
+  position:relative;margin:0;padding:0;border:0;font:inherit;color:inherit;
+  text-align:inherit;cursor:pointer;-webkit-appearance:none;appearance:none;
+}
+.cover-lg.cover-btn{background:transparent}
+.cover-chip{
+  position:absolute;right:.4rem;bottom:.4rem;max-width:calc(100% - .8rem);white-space:nowrap;overflow:hidden;
+  display:inline-flex;align-items:center;gap:.3rem;padding:.28rem .55rem;border-radius:999px;
+  background:rgba(40,26,14,.88);color:#F6EBD2;font:600 .72rem/1 var(--sans);letter-spacing:.02em;
+  box-shadow:0 1px 4px rgba(0,0,0,.35);pointer-events:none;transition:background-color .2s;
+}
+.cover-chip svg{width:.8rem;height:.8rem;flex:none}
+.cover-btn:hover .cover-chip{background:#000}
+
+html.preview-open{overflow:hidden}
+.preview{
+  padding:0;border:1px solid var(--card-border);border-radius:6px;
+  background:var(--parchment);color:var(--ink);
+  width:min(94vw,44rem);max-width:none;max-height:96vh;max-height:96dvh;overflow:hidden;
+  box-shadow:0 30px 80px -20px rgba(0,0,0,.6);
+}
+.preview::backdrop{background:rgba(20,12,6,.72)}
+.preview[open]{display:flex;flex-direction:column}
+.preview-head,.preview-foot{
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.75rem 1rem;flex:none;
+}
+.preview-head{border-bottom:1px solid var(--card-border)}
+.preview-foot{border-top:1px solid var(--card-border);font-size:.95rem}
+.preview-title{margin:0;font-family:var(--serif);font-weight:700;font-size:1.35rem;line-height:1.1}
+.preview-count{color:var(--ink-soft)}
+.preview-close,.preview-nav{
+  display:inline-flex;align-items:center;justify-content:center;padding:0;line-height:1;font:inherit;
+  border:1px solid var(--card-border);border-radius:50%;background:var(--parchment);color:var(--ink);cursor:pointer;
+}
+.preview-close{width:2.5rem;height:2.5rem;flex:none;font-size:1.5rem}
+.preview-close:hover,.preview-nav:hover:not(:disabled){background:var(--vellum)}
+.preview-stage{
+  position:relative;display:flex;align-items:center;justify-content:center;
+  flex:1 1 auto;min-height:0;overflow:auto;padding:.75rem;background:var(--parchment-deep);
+}
+.preview-img{
+  display:block;aspect-ratio:1/1.414;width:auto;max-width:100%;object-fit:contain;background:#fff;
+  height:calc(96vh - 10rem);height:calc(96dvh - 10rem);max-height:60rem;
+  box-shadow:0 2px 0 rgba(58,37,19,.18),0 14px 30px -14px rgba(58,37,19,.6);
+}
+.preview-img[hidden],.preview-msg[hidden]{display:none}   /* the rules above would otherwise beat the [hidden] attribute */
+.preview-msg{margin:0;padding:2rem 1rem;text-align:center;color:var(--ink-soft)}
+.preview-nav{
+  position:absolute;top:50%;transform:translateY(-50%);z-index:1;width:2.75rem;height:2.75rem;
+  font-size:1.7rem;background:var(--nav-bg-open);box-shadow:0 2px 8px rgba(0,0,0,.25);
+}
+.preview-prev{left:.5rem}
+.preview-next{right:.5rem}
+.preview-nav:disabled{opacity:.3;cursor:default}
 .issue h4{margin:0;font-family:var(--serif);font-weight:700;font-size:1.45rem;line-height:1.1}
 .issue .date{margin:.15em 0 .8em;color:var(--ink-soft);font-size:.98rem}
 /* Archive rows use slightly smaller buttons than the "current issue" card,
@@ -714,6 +773,24 @@ section[id]{scroll-margin-top:calc(var(--nav-h) + 12px)}
   </div>
 </footer>
 
+<!-- Cover preview viewer: opened by clicking a cover; filled in by initPreview() -->
+<dialog class="preview" id="previewDialog" aria-labelledby="previewTitle">
+  <div class="preview-head">
+    <h2 class="preview-title" id="previewTitle">Preview</h2>
+    <button type="button" class="preview-close" aria-label="Close preview">&times;</button>
+  </div>
+  <div class="preview-stage">
+    <button type="button" class="preview-nav preview-prev" aria-label="Previous page">&lsaquo;</button>
+    <img class="preview-img" alt="" decoding="async">
+    <p class="preview-msg" hidden>This preview couldn&rsquo;t be loaded. You can still read the full issue online.</p>
+    <button type="button" class="preview-nav preview-next" aria-label="Next page">&rsaquo;</button>
+  </div>
+  <div class="preview-foot">
+    <span class="preview-count" aria-live="polite">Page 1</span>
+    <a class="text-link preview-full" href="#" target="_blank" rel="noopener">Read the full issue &rarr;</a>
+  </div>
+</dialog>
+
 <!-- Libraries: 3D compass (three.js), world map (d3 + topojson) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
@@ -775,6 +852,15 @@ function coverMarkup(is){
     ? `<img src="${esc(is.cover)}" alt="" loading="lazy" decoding="async">`
     : coverSVG(is);
 }
+// The cover, as a button that opens the preview viewer when preview pages
+// exist for this issue (they're generated at deploy time from the PDF —
+// see scripts/build-previews.js). Without them it's the plain, non-clickable
+// cover it always was.
+function coverBlock(is, cls){
+  if (!is.preview || !is.preview.pages) return `<span class="${cls}">${coverMarkup(is)}</span>`;
+  const label = `Preview Volume ${is.id}, ${is.month} ${is.year}: cover and contents`;
+  return `<button type="button" class="${cls} cover-btn" data-preview="${esc(is.id)}" aria-label="${esc(label)}">${coverMarkup(is)}<span class="cover-chip" aria-hidden="true">${PREVIEW_ICON}Preview</span></button>`;
+}
 
 /* ------------------------------------------------------- download markup */
 const PDF_ICON = `<svg class="dl-icon" viewBox="0 0 22 26" aria-hidden="true">
@@ -784,6 +870,7 @@ const PDF_ICON = `<svg class="dl-icon" viewBox="0 0 22 26" aria-hidden="true">
   <rect x="0" y="13" width="17" height="8" rx="1" fill="#B23A24"/>
   <text x="8.5" y="19.3" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="6.2" fill="#fff">PDF</text>
 </svg>`;
+const PREVIEW_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>`;
 const VIEW_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
   <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>
 </svg>`;
@@ -847,7 +934,7 @@ function render(){
 
   slot.innerHTML = `
     <div class="current-grid">
-      <span class="cover-lg">${coverMarkup(cur)}</span>
+      ${coverBlock(cur, "cover-lg")}
       <div class="current-copy">
         <h3 class="issue-name">Volume ${esc(cur.id)}</h3>
         <p class="issue-date">${esc(cur.month)} ${cur.year}</p>
@@ -892,7 +979,7 @@ function renderArchive(){
       <div class="vol-head"><h3>Volume ${v}</h3><span>${years}, ${list.length} ${list.length === 1 ? "issue" : "issues"}</span></div>
       <ul class="issues">
         ${list.map(is => `<li class="issue">
-          <span class="thumb">${coverMarkup(is)}</span>
+          ${coverBlock(is, "thumb")}
           <div>
             <h4>Volume ${esc(is.id)}</h4>
             <p class="date">${esc(is.month)} ${is.year}</p>
@@ -1479,6 +1566,71 @@ function initCompass(){
   run();
 }
 
+/* ----------------------------------------------------------- preview viewer */
+// Click a cover to flip through the issue's front matter (cover, statement
+// of intent, contents) in a dialog. The page images come from
+// previews/<id>/<n>.jpg, made at deploy time; see scripts/build-previews.js.
+function initPreview(){
+  const dlg = document.getElementById("previewDialog");
+  if (!dlg) return;
+  const $ = sel => dlg.querySelector(sel);
+  const img = $(".preview-img"), title = $(".preview-title"), count = $(".preview-count"),
+        prev = $(".preview-prev"), next = $(".preview-next"), full = $(".preview-full"),
+        msg = $(".preview-msg"), stage = $(".preview-stage");
+  let cur = null, page = 1;
+  const src = (is, p) => `previews/${is.id}/${p}.jpg`;
+
+  function show(p){
+    const n = cur.preview.pages;
+    page = Math.max(1, Math.min(n, p));
+    msg.hidden = true; img.hidden = false;
+    img.alt = `Volume ${cur.id}, ${cur.month} ${cur.year}, page ${page} of ${n}`;
+    img.src = src(cur, page);
+    count.textContent = `Page ${page} of ${n}`;
+    prev.disabled = page <= 1;
+    next.disabled = page >= n;
+    if (page < n) new Image().src = src(cur, page + 1);      // warm the cache for the next page
+  }
+  function open(id){
+    const is = byId(id);
+    if (!is || !is.preview) return;
+    cur = is;
+    title.textContent = `Volume ${is.id} · ${is.month} ${is.year}`;
+    full.href = viewUrl(is);
+    show(1);
+    document.documentElement.classList.add("preview-open");
+    if (typeof dlg.showModal === "function") dlg.showModal(); else dlg.setAttribute("open", "");
+  }
+  function close(){
+    if (typeof dlg.close === "function") dlg.close(); else dlg.removeAttribute("open");
+    document.documentElement.classList.remove("preview-open");
+  }
+
+  document.addEventListener("click", e => {
+    const b = e.target.closest("[data-preview]");
+    if (b) open(b.dataset.preview);
+  });
+  dlg.addEventListener("close", () => document.documentElement.classList.remove("preview-open"));
+  dlg.addEventListener("click", e => { if (e.target === dlg) close(); });      // click on the backdrop
+  $(".preview-close").addEventListener("click", close);
+  prev.addEventListener("click", () => show(page - 1));
+  next.addEventListener("click", () => show(page + 1));
+  document.addEventListener("keydown", e => {
+    if (!dlg.open) return;
+    if (e.key === "ArrowLeft") show(page - 1);
+    else if (e.key === "ArrowRight") show(page + 1);
+    else if (e.key === "Escape" && typeof dlg.showModal !== "function") close();   // native dialogs handle Escape themselves
+  });
+  img.addEventListener("error", () => { img.hidden = true; msg.hidden = false; });
+  let startX = null;                                                              // swipe between pages on touch screens
+  stage.addEventListener("touchstart", e => { startX = e.touches[0].clientX; }, {passive:true});
+  stage.addEventListener("touchend", e => {
+    if (startX === null) return;
+    const dx = e.changedTouches[0].clientX - startX; startX = null;
+    if (Math.abs(dx) > 50) show(page + (dx < 0 ? 1 : -1));
+  }, {passive:true});
+}
+
 /* ------------------------------------------------------------------ boot */
 async function loadIssues(){
   try{
@@ -1498,6 +1650,7 @@ async function loadIssues(){
   initNav();
   initTheme();
   initDyslexicFont();
+  initPreview();
   initArchiveControls();
   detectSizes();
   initCompass();

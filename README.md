@@ -22,6 +22,7 @@ the-compass/
 ├── README.md
 ├── scripts/
 │   ├── build-issues-index.js      ← combines data/issues/* into data/issues.json
+│   ├── build-previews.js          ← renders each PDF's cover + first pages to JPEGs (at deploy)
 │   └── check-pdf-links.js         ← checks issue PDFs are still reachable
 ├── data/
 │   ├── issues.json                ← GENERATED — don't edit directly, see below
@@ -33,6 +34,7 @@ the-compass/
 │   ├── The-Compass-Vol-3-3.pdf
 │   ├── The-Compass-Vol-3-2.pdf
 │   └── …
+├── previews/                     ← GENERATED at deploy from the PDFs; not in git (see "Covers and previews")
 └── covers/                       ← not used by default (see below); only for hand-added cover overrides
     └── vol-3-3.jpg
 ```
@@ -88,7 +90,7 @@ This repo ships a `.pages.yml` config for [Pages CMS](https://pagescms.org), a f
    - **Upload the issue (PDF)** — click to upload the actual magazine PDF.
 6. Click **Save**. That's it — the new issue publishes automatically and is usually visible on the website within a minute or two.
 
-You don't need a cover image — the site automatically generates a simple, good-looking placeholder cover for every issue.
+You don't need a cover image — the site takes the cover (and a preview of the contents pages) straight from your PDF when it publishes.
 
 You don't need to worry about the order you add issues in: the website automatically sorts by year and month, so whichever issue is dated latest is shown as the current issue — even if it wasn't the last one you added. Pages CMS's own "Magazine issues" list is sorted the same way (newest first) automatically too, so what you see while browsing there matches what visitors see on the site.
 
@@ -101,12 +103,30 @@ Add a new file under `data/issues/`, named after the issue's code (e.g. `data/is
 ```
 
 - `size` — leave empty and the site reads the real file size once it's online, or type it yourself (`"45 MB"`).
-- `cover` — leave empty for a generated cover, or give an image path such as `"covers/vol-3-4.jpg"` (an A4-shaped image around 600 × 850 px works well).
+- `cover` — leave empty and the cover is taken from the PDF's first page (automatic). Only set it to override that with your own image, e.g. `"covers/vol-3-4.jpg"` (an A4-shaped image around 600 × 850 px works well). The Preview viewer works either way.
 - Put the PDF itself in the `pdfs/` folder with the matching file name.
 
 **Don't edit `data/issues.json` directly** — it's a generated file, combined automatically from everything in `data/issues/` by `scripts/build-issues-index.js`, which runs on every push (see `.github/workflows/deploy-pages.yml`). Direct edits to `data/issues.json` get overwritten the next time anything deploys. Always add or edit the individual files under `data/issues/` instead — whether by hand or through Pages CMS.
 
 Issues can be added in any order — the website works out which is the current one automatically. Pages CMS's own "Magazine issues" list also sorts newest-first automatically, since each issue is its own file (that's what enables the sorting — see the comments at the top of `.pages.yml` for the technical reasoning if you're curious).
+
+## Covers and previews
+
+Each issue's cover on the site is **page 1 of its PDF**, and clicking a cover (there's a small "Preview" tag on it) opens a viewer where visitors can flip through the issue's front matter — cover, statement of intent and the "Articles in this issue" contents — before deciding to download a 10–20 MB file. Arrow keys, on-screen buttons and swiping all work.
+
+Nothing needs uploading: `scripts/build-previews.js` renders these JPEGs from the PDFs **on every deploy** (about 3 MB in total, loaded only when someone opens a preview), so they always match the current PDF — including a corrected re-upload — and stay out of git. It works out how many pages count as front matter by reading the printed page numbers (roman numerals until the body starts at page 1), and falls back to the first four pages if it can't.
+
+- **If generation ever fails** the deploy still goes ahead: that issue just shows the old drawn placeholder cover and no Preview tag.
+- **Issues hosted on another site** (a `file` that's a full `https://…` address) aren't rendered — they keep the drawn cover.
+- **Trying it on your own computer** needs poppler (`sudo apt-get install poppler-utils`, or `brew install poppler`):
+
+  ```
+  node scripts/build-previews.js
+  node scripts/build-issues-index.js --with-previews
+  python3 -m http.server 8000
+  ```
+
+  ⚠️ The `--with-previews` run adds preview fields to `data/issues.json`. Those must **not** be committed (the images don't exist in git) — run `git checkout data/issues.json` before you commit.
 
 ## Search
 
@@ -143,5 +163,6 @@ The CC license is also linked in the site's footer and on the submissions page, 
 - Accessibility: works with keyboard and screen readers, and respects the "reduce motion" setting. If 3D isn't available, a flat compass is shown instead.
 - Dyslexia-friendly font: an "Aa" button in the nav (next to the theme toggle) switches all text to [OpenDyslexic](https://opendyslexic.org/), self-hosted in `fonts/` (SIL Open Font License — see `fonts/OpenDyslexic-LICENSE.txt`). The choice is remembered in `localStorage`, and the font files (~460 KB) only download if someone switches it on. The logo and hero title keep their normal typeface, like the issue covers.
 - Fluid sizing: the root font size scales smoothly with screen width (13px → 16px between 320px and 375px wide, full size above that). Since all text and icon/image sizes are in `rem`, everything scales together on very narrow phones instead of jumping at breakpoints — typical phones (375px+) are unaffected.
+- Cover previews: covers come from each PDF's first page, and clicking one opens a page-by-page preview of the front matter and contents (see "Covers and previews" above).
 - Issue downloads: each issue has a **Download** button and a **Read online** link (opens the PDF's viewer in a new tab). Issues hosted on another site (like Google Drive) skip the in-page progress bar, since browsers don't let a page read files from other sites' servers, and fall back to a normal browser download.
 - Dark mode: a toggle in the nav (moon/sun icon) switches the site's reading chrome — nav, sections, footer, forms — between light and dark. It defaults to the visitor's OS preference and remembers their choice via `localStorage`. The hero (compass + map) stays the same in both themes by design, like a book's cover art.

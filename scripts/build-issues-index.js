@@ -8,10 +8,20 @@
 // in sync. DO NOT hand-edit data/issues.json directly — those edits will
 // be silently overwritten the next time this runs. Edit or add files under
 // data/issues/ instead (or use Pages CMS, which does that for you).
+//
+// Flag: --with-previews
+//   Also folds in the images made by scripts/build-previews.js: for each
+//   issue that has a previews/<id>/ folder it adds `preview: { pages: N }`
+//   and, unless the issue already sets its own `cover`, points `cover` at
+//   previews/<id>/cover.jpg. The deploy workflow passes this flag. It is
+//   opt-in so the committed data/issues.json never refers to images that
+//   only exist after a deploy (the previews folder is not in git).
 
 const fs = require("fs");
 const path = require("path");
 
+const WITH_PREVIEWS = process.argv.includes("--with-previews");
+const PREVIEWS_DIR = path.join(__dirname, "..", "previews");
 const SRC_DIR = path.join(__dirname, "..", "data", "issues");
 const OUT_FILE = path.join(__dirname, "..", "data", "issues.json");
 
@@ -39,6 +49,20 @@ function main(){
     }catch(e){
       console.error(`Skipping ${file}: ${e.message}`);
     }
+  }
+
+  if (WITH_PREVIEWS){
+    let n = 0;
+    for (const is of issues){
+      const dir = path.join(PREVIEWS_DIR, String(is.id));
+      if (!fs.existsSync(dir)) continue;
+      const pages = fs.readdirSync(dir).filter(f => /^\d+\.jpg$/.test(f)).length;
+      if (!pages) continue;
+      is.preview = { pages };
+      if (!is.cover && fs.existsSync(path.join(dir, "cover.jpg"))) is.cover = `previews/${is.id}/cover.jpg`;
+      n++;
+    }
+    console.log(`Attached previews to ${n} of ${issues.length} issue(s).`);
   }
 
   // Sort newest-first (matches the site's own client-side sort — this is
