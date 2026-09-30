@@ -118,11 +118,11 @@ Each issue's cover on the site is **page 1 of its PDF**, and clicking a cover (t
 - **Getting around:** the ‹ › buttons, the left/right arrow keys, swiping on a phone, Home/End for the first/last page, and a **Go to page** box (type a printed page number, e.g. from the contents).
 - The one way to *save* an issue is still the **Download** button.
 
-**Nothing needs uploading.** `scripts/build-previews.js` renders every page of every PDF to a JPEG during the deploy (about 1,600 pages, ~110 MB, roughly a minute), so the viewer always matches the current PDF — including a corrected re-upload — and the images stay out of git. Visitors only load the pages they actually look at (~60 KB each). It works out where the body starts by reading the printed page numbers in the footers, and falls back to plain 1…N numbering if it can't.
+**Nothing needs uploading.** `scripts/build-previews.js` renders every page of every PDF to a JPEG during the deploy (about 1,600 pages, ~110 MB; measured at about 35 seconds on GitHub's servers), so the viewer always matches the current PDF — including a corrected re-upload — and the images stay out of git. Visitors only load the pages they actually look at (~60 KB each). It works out where the body starts by reading the printed page numbers in the footers, and falls back to plain 1…N numbering if it can't.
 
 - **It's cached.** The deploy re-renders only when a PDF (or the script) changes; an ordinary edit reuses the cached images, so it costs seconds, not a minute. The cache is saved only after a fully successful render.
 - **If generation ever fails** the deploy still goes ahead: the site just keeps the old drawn placeholder covers and shows no Preview tag.
-- **It roughly doubles the size of the published site** (about 100 MB of PDFs plus about 110 MB of page images). That's comfortably inside GitHub Pages' 1 GB limit. If it ever needs to shrink, `PAGE_WIDTH` and `JPEG_OPTS` at the top of the script trade sharpness for size (at 640 px wide the images would be about 20% smaller).
+- **It roughly doubles the size of the published site** (about 100 MB of PDFs plus about 110 MB of page images; the compressed upload GitHub reports is about 190 MB). That's comfortably inside GitHub Pages' 1 GB limit. If it ever needs to shrink, `PAGE_WIDTH` and `JPEG_OPTS` at the top of the script trade sharpness for size (at 640 px wide the images would be about 20% smaller).
 - **Issues hosted on another site** (a `file` that's a full `https://…` address) aren't rendered — they keep the drawn cover and have no viewer.
 - **Trying it on your own computer** needs poppler (`sudo apt-get install poppler-utils`, or `brew install poppler`) and about 110 MB of disk space:
 
