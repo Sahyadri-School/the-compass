@@ -122,6 +122,15 @@ jobs:
       - name: Build issues.json from data/issues/
         run: node scripts/build-issues-index.js --with-previews
 
+      # A static landing page per issue (for search engines and direct
+      # links), the sitemap listing them, and an RSS feed linking to them —
+      # all derived from data/issues.json, so they stay in sync with it.
+      - name: Build per-issue pages, sitemap, and RSS feed
+        run: |
+          node scripts/build-issue-pages.js
+          node scripts/build-sitemap.js
+          node scripts/build-feed.js
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 

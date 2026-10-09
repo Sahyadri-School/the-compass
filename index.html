@@ -7,6 +7,7 @@
 <meta name="description" content="The Compass is a free online magazine of mathematics and science for teachers and students, published by the Community Mathematics Centre, Schools of the Krishnamurti Foundation India (KFI).">
 <meta name="theme-color" content="#F3E7CD">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%AD%3C/text%3E%3C/svg%3E">
+<link rel="alternate" type="application/rss+xml" title="The Compass — new issues" href="feed.xml">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -464,10 +465,15 @@ html.preview-open{overflow:hidden}
 .preview::backdrop{background:rgba(20,12,6,.72)}
 .preview[open]{display:flex;flex-direction:column}
 .preview-head,.preview-foot{
-  display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.75rem 1rem;flex:none;
+  display:flex;align-items:center;justify-content:space-between;gap:.75rem 1rem;padding:.75rem 1rem;flex:none;
 }
 .preview-head{border-bottom:1px solid var(--card-border)}
-.preview-foot{border-top:1px solid var(--card-border);font-size:.95rem}
+.preview-foot{border-top:1px solid var(--card-border);font-size:.95rem;flex-wrap:wrap}
+.preview-cite{
+  font:600 .85rem/1 var(--sans);padding:.5rem .75rem;border-radius:3px;border:1px solid var(--card-border);
+  background:transparent;color:var(--ink);cursor:pointer;white-space:nowrap;
+}
+.preview-cite:hover{background:rgba(138,90,43,.1)}
 .preview-title{margin:0;font-family:var(--serif);font-weight:700;font-size:1.35rem;line-height:1.1}
 .preview-count{color:var(--ink-soft)}
 .preview-goto{display:inline-flex;align-items:center;gap:.5rem;color:var(--ink-soft);white-space:nowrap}
@@ -616,6 +622,42 @@ html.preview-open{overflow:hidden}
 :root.dyslexic .font-toggle{background:rgba(138,90,43,.2)}
 /* The logo and the big hero title are artwork, like the issue covers: they keep their typeface. */
 .dyslexic .brand,.dyslexic .hero-title{font-family:"Cormorant Garamond",Georgia,serif}
+
+/* =========================================================
+   Print
+   ========================================================= */
+.print-only{display:none}
+@media print{
+  /* Chrome that only makes sense on screen: fixed nav, the animated
+     compass/map, theme/font toggles, the mobile menu button, cover
+     "Preview" chips, and the JS download widgets (a button that starts a
+     fetch means nothing on paper — the print-only line below gives the
+     site address instead). */
+  .nav,.stage,#map,.theme-toggle,.menu-btn,.dl,.cover-chip,.preview,.skip,.hero-actions,.scale-bar,.archive-search{display:none!important}
+  .print-only{display:block}
+
+  .hero,.hero-inner{min-height:0;padding-top:0}
+  .hero::before,.hero::after{display:none}
+  body{background:none;color:#000}
+  .section,.current,.archive{background:none;border-color:#000}
+  /* Footer text/links are pale-on-dark by design on screen (var(--parchment)
+     etc.) — fine against the footer's own dark background, unreadable once
+     that background is stripped for print, so override explicitly rather
+     than relying on the body-level color reset above. */
+  .footer,.footer a,.footer .contact,.footer-bottom,.footer-brand{background:none;color:#000}
+
+  /* Textures and shadows cost ink without adding information on paper. */
+  body,.hero,.current,.footer{background-image:none}
+  .cover-lg,.thumb{box-shadow:none;transform:none}
+
+  /* Expose real link destinations, since the underline alone doesn't
+     survive onto paper the way it does on screen. */
+  a{color:#000;text-decoration:underline}
+  a[href^="http"]::after,a[href^="mailto:"]::after{content:" (" attr(href) ")";font-weight:400;font-size:.85em;color:#333}
+
+  .section{padding:20px 0}
+  .issue,.vol{break-inside:avoid}
+}
 </style>
 </head>
 
@@ -675,6 +717,7 @@ html.preview-open{overflow:hidden}
           <a class="btn" href="#current">See the current issue</a>
           <a class="text-link" href="#archive">Browse the archive</a>
         </div>
+        <p class="print-only">Read and download every issue at sahyadri-school.github.io/the-compass</p>
       </div>
 
       <div class="stage" id="stage" role="img" aria-label="An antique brass compass whose needle swings and settles as the page loads and scrolls">
@@ -760,6 +803,7 @@ html.preview-open{overflow:hidden}
         <p>The editor acknowledges with grateful thanks help received from Shri Jagadeesh Rayala, Shri Bhau Ghadge, Aarush Badruka and Sailesh Mucheli of Sahyadri School KFI in setting up this website.</p>
         <p class="contact">Contact id: <a href="mailto:compass.math.2024@gmail.com">compass.math.2024@gmail.com</a></p>
         <p><a href="submit.html">Interested in writing for us? See our submission guidelines →</a></p>
+        <p><a href="feed.xml">Subscribe to new issues by RSS →</a></p>
       </div>
     </div>
     <p class="footer-bottom">©Community Mathematics Centre, Schools of the KFI &middot; Magazine content licensed <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="noopener">CC BY-NC-SA 4.0</a></p>
@@ -781,6 +825,7 @@ html.preview-open{overflow:hidden}
   <div class="preview-foot">
     <span class="preview-count" aria-live="polite">Page 1</span>
     <label class="preview-goto">Go to page <input class="preview-goto-input" type="number" min="1" step="1" inputmode="numeric" placeholder="&ndash;"></label>
+    <button type="button" class="preview-cite">Copy citation</button>
   </div>
 </dialog>
 

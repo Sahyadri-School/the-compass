@@ -25,6 +25,9 @@ the-compass/
 ├── scripts/
 │   ├── build-issues-index.js      ← combines data/issues/* into data/issues.json
 │   ├── build-previews.js          ← renders every page of each PDF to JPEGs (at deploy)
+│   ├── build-issue-pages.js       ← writes issues/<id>.html, one per issue (at deploy)
+│   ├── build-sitemap.js           ← regenerates sitemap.xml to include them (at deploy)
+│   ├── build-feed.js              ← writes feed.xml, the RSS feed (at deploy)
 │   └── check-pdf-links.js         ← checks issue PDFs are still reachable
 ├── data/
 │   ├── issues.json                ← GENERATED — don't edit directly, see below
@@ -37,6 +40,8 @@ the-compass/
 │   ├── The-Compass-Vol-3-2.pdf
 │   └── …
 ├── previews/                     ← GENERATED at deploy from the PDFs; not in git (see "Covers and previews")
+├── issues/                       ← GENERATED at deploy by build-issue-pages.js; not in git (see "Per-issue pages, sitemap, and RSS feed")
+├── feed.xml                      ← GENERATED at deploy by build-feed.js; not in git
 └── covers/                       ← not used by default (see below); only for hand-added cover overrides
     └── vol-3-3.jpg
 ```
@@ -136,6 +141,27 @@ Each issue's cover on the site is **page 1 of its PDF**, and clicking a cover (t
 
   ⚠️ The `--with-previews` run adds preview fields to `data/issues.json`. Those must **not** be committed (the images don't exist in git) — run `git checkout data/issues.json` before you commit.
 
+## Per-issue pages, sitemap, and RSS feed
+
+Besides the single-page site at `index.html`, every issue also gets its own small, plain HTML page — `issues/<id>.html` (e.g. `issues/3-3.html`) — with a title, description, a direct download link, and a "Copy citation" button. It exists because `index.html` is a JavaScript single-page app: without it, search engines (and anyone sharing a link to one specific issue) would never see anything more than the site's one shared title and description. These pages need no JavaScript to show their content, so they're fully crawlable.
+
+- **`scripts/build-issue-pages.js`** writes `issues/<id>.html` for every issue, plus `issues/index.html` listing them all. Runs at deploy time, from `data/issues.json` — like `previews/`, the `issues/` folder is generated and not in git.
+- **`scripts/build-sitemap.js`** regenerates `sitemap.xml` to list the site's static pages plus every issue page. Unlike `issues/`, `sitemap.xml` **is** committed (it's small and has no per-deploy noise like timestamps), the same way `data/issues.json` is — so don't hand-edit it either; add a static entry in the script itself, or an issue the normal way.
+- **`scripts/build-feed.js`** writes `feed.xml`, an RSS feed with one item per issue (newest first), each linking to that issue's own page above. Linked from `<head>` in `index.html` (so feed readers can auto-discover it) and from the footer ("Subscribe to new issues by RSS"). Generated at deploy time, not in git.
+- **Copy citation** — the issue pages' citation button, and a matching one in the in-page preview viewer's footer (page-aware: it names the page you're looking at), both copy a plain-text citation ending in that issue's `issues/<id>.html` URL. The two are built separately (one at deploy time in Node, one in the browser) but produce identical text — see the matching comments on `citeText()` in `scripts/build-issue-pages.js` and `assets/main.js`.
+
+To try any of this locally:
+
+```
+node scripts/build-issues-index.js --with-previews
+node scripts/build-issue-pages.js
+node scripts/build-sitemap.js
+node scripts/build-feed.js
+python3 -m http.server 8000
+```
+
+⚠️ Same caution as above: `git checkout data/issues.json` before committing if you ran this locally, and don't commit anything this leaves under `issues/` or `feed.xml` either (both are gitignored for exactly this reason).
+
 ## Search
 
 The Archive section has a search box that filters issues live by volume, month, or year — driven entirely by the `data/issues.json` data, no extra setup needed.
@@ -174,3 +200,5 @@ The CC license is also linked in the site's footer and on the submissions page, 
 - Cover previews: covers come from each PDF's first page, and clicking one opens a page-by-page viewer for the whole issue (see "Covers and previews" above).
 - Issue downloads: each issue has a **Download** button. Issues hosted on another site (like Google Drive) skip the in-page progress bar, since browsers don't let a page read files from other sites' servers, and fall back to a normal browser download.
 - Dark mode: a toggle in the nav (moon/sun icon) switches the site's reading chrome — nav, sections, footer, forms — between light and dark. It defaults to the visitor's OS preference and remembers their choice via `localStorage`. The hero (compass + map) stays the same in both themes by design, like a book's cover art.
+- Print stylesheet: printing `index.html` or `submit.html` (e.g. the browser's Print dialog, or Print to PDF) drops the nav, the animated compass/map, theme/font toggles, and the JS download buttons, resets dark-theme colors to plain black-on-white, and prints real URLs after links (e.g. the contact email) since the underline alone doesn't survive onto paper.
+- SEO: see "Per-issue pages, sitemap, and RSS feed" above — a plain page per issue, a sitemap listing them, and an RSS feed, all generated at deploy time so search engines and feed readers see real content behind `index.html`'s single-page app.

@@ -11,6 +11,15 @@ const REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const byId = id => ISSUES.find(i => i.id === id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
+// Matches SITE_URL and citeText() in scripts/build-issue-pages.js exactly,
+// so citing an issue page's own "Copy citation" button and citing it from
+// here (the preview viewer) always agree.
+const SITE_URL = "https://sahyadri-school.github.io/the-compass/";
+function citeText(is, pageLabel){
+  const page = pageLabel ? `, ${pageLabel.toLowerCase()}` : "";
+  return `The Compass, Volume ${is.id} (${is.month} ${is.year})${page}. Community Mathematics Centre, Schools of the Krishnamurti Foundation India (KFI). ${SITE_URL}issues/${is.id}.html`;
+}
+
 /* ------------------------------------------------------------------ covers */
 const VOL_TINT = {1:"#3F5566", 2:"#4F6B59", 3:"#7A4A23"};
 function coverSVG(is){
@@ -778,7 +787,7 @@ function initPreview(){
   const $ = sel => dlg.querySelector(sel);
   const img = $(".preview-img"), title = $(".preview-title"), count = $(".preview-count"),
         prev = $(".preview-prev"), next = $(".preview-next"), goto_ = $(".preview-goto-input"),
-        msg = $(".preview-msg"), stage = $(".preview-stage");
+        msg = $(".preview-msg"), stage = $(".preview-stage"), citeBtn = $(".preview-cite");
   let cur = null, page = 1, N = 0, front = 0;
   const src = (is, p) => `previews/${is.id}/${p}.jpg`;
 
@@ -833,6 +842,17 @@ function initPreview(){
   $(".preview-close").addEventListener("click", close);
   prev.addEventListener("click", () => show(page - 1));
   next.addEventListener("click", () => show(page + 1));
+  if (citeBtn && navigator.clipboard){
+    citeBtn.addEventListener("click", () => {
+      navigator.clipboard.writeText(citeText(cur, label(page))).then(() => {
+        const was = citeBtn.textContent;
+        citeBtn.textContent = "Copied!";
+        setTimeout(() => { citeBtn.textContent = was; }, 1800);
+      }).catch(() => {});
+    });
+  } else if (citeBtn){
+    citeBtn.hidden = true;   // no Clipboard API (e.g. insecure context) — nothing graceful to fall back to here
+  }
   goto_.addEventListener("change", jump);
   goto_.addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); jump(); } });
   document.addEventListener("keydown", e => {
