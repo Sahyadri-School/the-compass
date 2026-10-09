@@ -29,14 +29,16 @@ jobs:
           # Google Fonts, CDNs) — this only verifies local file paths and
           # in-page #anchors actually exist, which is what tends to break
           # when a page or a section id gets renamed.
-          # --root-dir: lets lychee resolve root-relative paths (e.g.
-          # 404.html's "/the-compass/" link) against the repo root instead
-          # of reporting them as unresolvable.
+          # --exclude: 404.html's "/the-compass/" link is root-relative to
+          # the deployed GitHub Pages URL, not to this checkout, so there's
+          # no local path lychee could ever resolve it against — skip it by
+          # pattern instead of letting it show up as a permanent false
+          # positive.
           # Informational only (continue-on-error): a false positive here
-          # (e.g. an absolute production-only path, or a data: favicon)
-          # should never block a real deploy. Check the Actions run summary
-          # for anything it flags and fix it by hand if it's a real break.
-          args: --offline --no-progress --root-dir . './*.html'
+          # (e.g. a data: favicon) should never block a real deploy. Check
+          # the Actions run summary for anything it flags and fix it by
+          # hand if it's a real break.
+          args: --offline --no-progress --exclude '^/the-compass/$' './*.html'
           fail: false
 
       # treosh/lighthouse-ci-action v12 dropped its old `staticDistDir`
