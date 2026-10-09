@@ -276,6 +276,16 @@ section[id]{scroll-margin-top:calc(var(--nav-h) + 12px)}
   font-family:var(--serif);font-style:italic;font-weight:600;
   font-size:clamp(1.4rem,2.5vw,1.9rem);line-height:1.25;color:#8A5A2B;
 }
+/* Shown only on a return visit where the current issue has changed since
+   the last one this browser saw — see isNewSinceLastVisit() in
+   assets/main.js. Not theme-linked for the same reason as the rest of the
+   hero text: it always sits on the permanently-light hero panel. */
+.new-badge{
+  display:inline-block;vertical-align:middle;margin-left:.2em;
+  font-family:var(--sans);font-style:normal;font-weight:700;font-size:.62em;letter-spacing:.04em;
+  text-transform:uppercase;color:#F3E7CD;background:#8E3B24;
+  padding:.28em .55em;border-radius:999px;
+}
 .hero-inst{margin:0;font-size:1.06rem;line-height:1.55;color:#654428}
 .hero-inst strong{display:block;font-weight:700;color:#3A2513;font-size:1.12rem}
 .hero-stat{margin:14px 0 0;font-size:.96rem;color:#654428}

@@ -20,6 +20,18 @@ function citeText(is, pageLabel){
   return `The Compass, Volume ${is.id} (${is.month} ${is.year})${page}. Community Mathematics Centre, Schools of the Krishnamurti Foundation India (KFI). ${SITE_URL}issues/${is.id}.html`;
 }
 
+/* ---------------------------------------------------- "New issue" badge */
+// Shown only on a RETURN visit where the current issue has changed since
+// the last one this browser saw — never on a first-ever visit (nothing to
+// compare against) and never twice for the same issue.
+const SEEN_KEY = "compass-last-seen-issue";
+function isNewSinceLastVisit(curId){
+  let seen = null;
+  try{ seen = localStorage.getItem(SEEN_KEY); }catch(e){ /* private mode etc. */ }
+  try{ localStorage.setItem(SEEN_KEY, curId); }catch(e){ /* ignore */ }
+  return seen !== null && seen !== curId;
+}
+
 /* ------------------------------------------------------------------ covers */
 const VOL_TINT = {1:"#3F5566", 2:"#4F6B59", 3:"#7A4A23"};
 function coverSVG(is){
@@ -123,7 +135,8 @@ function render(){
   }
 
   const cur = sortedIssues()[0];
-  heroIssue.textContent = `Current Issue: Volume ${cur.id}, ${cur.month} ${cur.year}`;
+  const badge = isNewSinceLastVisit(cur.id) ? ` <span class="new-badge">New</span>` : "";
+  heroIssue.innerHTML = `Current Issue: Volume ${esc(cur.id)}, ${esc(cur.month)} ${cur.year}${badge}`;
 
   const earliestYear = Math.min(...ISSUES.map(is => is.year));
   const count = ISSUES.length;
@@ -771,6 +784,23 @@ function initCompass(){
   run();
 }
 
+/* --------------------------------------------- reading-position memory */
+// One issue read partway, then closed, reopens to the same page next time
+// — a single localStorage key mapping issue id -> last page read, rather
+// than a key per issue (keeps things tidy, same reason detectSizes() etc.
+// already guard every access against private-mode exceptions).
+const PROGRESS_KEY = "compass-progress";
+function loadProgress(){
+  try{ return JSON.parse(localStorage.getItem(PROGRESS_KEY) || "{}"); }catch(e){ return {}; }
+}
+function saveProgress(id, page){
+  try{
+    const all = loadProgress();
+    all[id] = page;
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(all));
+  }catch(e){ /* private mode etc. */ }
+}
+
 /* ----------------------------------------------------------- preview viewer */
 // Click a cover to read through the whole issue, page by page, in a dialog.
 // The page images come from previews/<id>/<n>.jpg, rendered from the PDF at
@@ -810,6 +840,7 @@ function initPreview(){
     goto_.value = front ? (page > front ? page - front : "") : page;
     prev.disabled = page <= 1;
     next.disabled = page >= N;
+    saveProgress(cur.id, page);
     for (const q of [page + 1, page + 2, page - 1])           // warm the cache for the pages most likely next
       if (q >= 1 && q <= N) new Image().src = src(cur, q);
   }
@@ -824,7 +855,8 @@ function initPreview(){
     cur = is; N = is.preview.pages; front = Math.min(is.preview.front || 0, N - 1);
     title.textContent = `Volume ${is.id} · ${is.month} ${is.year}`;
     goto_.max = front ? N - front : N;
-    show(1);
+    const saved = loadProgress()[is.id];
+    show(Number.isInteger(saved) && saved >= 1 && saved <= N ? saved : 1);
     document.documentElement.classList.add("preview-open");
     if (typeof dlg.showModal === "function") dlg.showModal(); else dlg.setAttribute("open", "");
   }
