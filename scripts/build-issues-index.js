@@ -26,6 +26,13 @@ const PREVIEWS_DIR = path.join(__dirname, "..", "previews");
 const SRC_DIR = path.join(__dirname, "..", "data", "issues");
 const OUT_FILE = path.join(__dirname, "..", "data", "issues.json");
 
+// Matches fmtMB() in assets/main.js exactly, so a size computed here and
+// one detected client-side (detectSizes()) never disagree.
+function fmtMB(bytes){
+  const mb = bytes / 1048576;
+  return mb < 10 ? `${mb.toFixed(1)} MB` : `${Math.round(mb)} MB`;
+}
+
 const MONTH_ORDER = {
   January: 1, February: 2, March: 3, April: 4, May: 5, June: 6,
   July: 7, August: 8, September: 9, October: 10, November: 11, December: 12
@@ -50,6 +57,18 @@ function main(){
     }catch(e){
       console.error(`Skipping ${file}: ${e.message}`);
     }
+  }
+
+  // Fill in `size` for local PDFs that don't already set one, so it's
+  // correct on first paint (and for crawlers/no-JS) instead of only
+  // appearing after the client's own HEAD-request check (see detectSizes()
+  // in assets/main.js, which still runs as a fallback for anything missed
+  // here — e.g. an issue added by hand before its PDF was committed).
+  for (const is of issues){
+    if (is.size || !is.file || /^https?:\/\//i.test(is.file)) continue;
+    const full = path.join(__dirname, "..", is.file);
+    if (!fs.existsSync(full)) continue;
+    is.size = fmtMB(fs.statSync(full).size);
   }
 
   if (WITH_PREVIEWS){

@@ -2,7 +2,7 @@
 
 Online magazine of the Community Mathematics Centre, Schools of the Krishnamurti Foundation India (KFI).
 
-The core site is a single file, `index.html` — no build step, runs on GitHub Pages as is. A few supporting pages (submissions, 404) and files (SEO, housekeeping) sit alongside it; see the folder layout below.
+The core site is `index.html` plus its script, `assets/main.js` — no build step, runs on GitHub Pages as is. A few supporting pages (submissions, 404) and files (SEO, housekeeping) sit alongside it; see the folder layout below.
 
 ## Folder layout
 
@@ -14,6 +14,8 @@ the-compass/
 │   └── ISSUE_TEMPLATE/               ← bug report & content suggestion forms
 ├── .pages.yml                     ← Pages CMS config (see "Adding a new issue")
 ├── index.html
+├── assets/
+│   └── main.js                    ← index.html's script, loaded with `defer`
 ├── submit.html                   ← "Write for us" submissions page
 ├── 404.html                      ← styled not-found page
 ├── robots.txt
@@ -53,7 +55,7 @@ PDF file names must match the `file` entries in the `ISSUES` list near the botto
 ## Publishing on GitHub Pages
 
 1. Create a new public repository on GitHub (for example `the-compass`).
-2. Add all the files in this repo — `index.html`, `submit.html`, `404.html`, `robots.txt`, `sitemap.xml`, `README.md` — plus the `pdfs` folder (see the note on large files below).
+2. Add all the files in this repo — `index.html`, `assets/main.js`, `submit.html`, `404.html`, `robots.txt`, `sitemap.xml`, `README.md` — plus the `pdfs` folder (see the note on large files below).
 3. In the repository, open **Settings → Pages**. Under "Build and deployment", choose **GitHub Actions** as the source (the workflow at `.github/workflows/deploy-pages.yml` handles the rest — no branch/folder to pick).
 4. After a minute or two the site is live at `https://<your-username>.github.io/the-compass/`.
 

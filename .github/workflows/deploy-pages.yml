@@ -29,21 +29,35 @@ jobs:
           # Google Fonts, CDNs) — this only verifies local file paths and
           # in-page #anchors actually exist, which is what tends to break
           # when a page or a section id gets renamed.
+          # --root-dir: lets lychee resolve root-relative paths (e.g.
+          # 404.html's "/the-compass/" link) against the repo root instead
+          # of reporting them as unresolvable.
           # Informational only (continue-on-error): a false positive here
           # (e.g. an absolute production-only path, or a data: favicon)
           # should never block a real deploy. Check the Actions run summary
           # for anything it flags and fix it by hand if it's a real break.
-          args: --offline --no-progress './*.html'
+          args: --offline --no-progress --root-dir . './*.html'
           fail: false
+
+      # treosh/lighthouse-ci-action v12 dropped its old `staticDistDir`
+      # input (it now only hits real URLs), so the site needs to be served
+      # locally first — otherwise it tries to fetch the literal string
+      # "/index.html" as a URL and fails with INVALID_URL.
+      - name: Serve the site locally for Lighthouse
+        run: |
+          python3 -m http.server 8080 &
+          for i in $(seq 1 20); do
+            curl -sf http://localhost:8080/index.html >/dev/null && break
+            sleep 0.5
+          done
 
       - name: Lighthouse CI (accessibility & performance report)
         uses: treosh/lighthouse-ci-action@v12
         continue-on-error: true
         with:
-          staticDistDir: "."
           urls: |
-            /index.html
-            /submit.html
+            http://localhost:8080/index.html
+            http://localhost:8080/submit.html
           uploadArtifacts: true
           temporaryPublicStorage: true
 
@@ -106,6 +120,14 @@ jobs:
           rsync -av --exclude='.git' --exclude='.github' --exclude='_site' \
             --exclude='.gitignore' --exclude='scripts' --exclude='data/issues' \
             ./ _site/
+
+          # 404.html's "Return to The Compass" link is hardcoded to this
+          # repo's current project-page path. If a CNAME file ever puts the
+          # site on a custom domain (served from "/" instead), repoint it —
+          # so the link doesn't quietly 404 after a domain change.
+          if [ -f _site/CNAME ]; then
+            sed -i 's#href="/the-compass/"#href="/"#' _site/404.html
+          fi
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
