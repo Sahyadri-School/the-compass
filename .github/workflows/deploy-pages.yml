@@ -21,6 +21,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # 404.html's "Return to The Compass" link is root-relative
+      # ("/the-compass/"), which is correct for the deployed GitHub Pages
+      # URL but has no real local path lychee could resolve it against
+      # (there's no "the-compass" folder in this checkout — that's a URL
+      # path, not a directory). --root-dir alone would make lychee look
+      # for one and report "file not found"; standing in a placeholder
+      # here (only in this throwaway checkout, never committed or
+      # deployed) lets --root-dir resolve it to a real file like any
+      # other internal link, instead of a permanent known-false-positive.
+      - name: Stand in a placeholder for the deployed site's own path
+        run: mkdir -p the-compass && echo "placeholder for lychee's --root-dir — see deploy-pages.yml" > the-compass/index.html
+
       - name: Check internal links (including in-page anchors)
         uses: lycheeverse/lychee-action@v2
         continue-on-error: true
@@ -29,16 +41,13 @@ jobs:
           # Google Fonts, CDNs) — this only verifies local file paths and
           # in-page #anchors actually exist, which is what tends to break
           # when a page or a section id gets renamed.
-          # --exclude: 404.html's "/the-compass/" link is root-relative to
-          # the deployed GitHub Pages URL, not to this checkout, so there's
-          # no local path lychee could ever resolve it against — skip it by
-          # pattern instead of letting it show up as a permanent false
-          # positive.
+          # --root-dir: resolves 404.html's "/the-compass/" link against
+          # the placeholder directory above instead of reporting it as
+          # unresolvable.
           # Informational only (continue-on-error): a false positive here
-          # (e.g. a data: favicon) should never block a real deploy. Check
-          # the Actions run summary for anything it flags and fix it by
-          # hand if it's a real break.
-          args: --offline --no-progress --exclude '^/the-compass/$' './*.html'
+          # should never block a real deploy. Check the Actions run
+          # summary for anything it flags and fix it by hand if it's real.
+          args: --offline --no-progress --root-dir . './*.html'
           fail: false
 
       # treosh/lighthouse-ci-action v12 dropped its old `staticDistDir`
