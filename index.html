@@ -668,6 +668,11 @@ html.preview-open{overflow:hidden}
      site address instead). */
   .nav,.stage,#map,.theme-toggle,.menu-btn,.dl,.cover-chip,.preview,.skip,.hero-actions,.scale-bar,.archive-search{display:none!important}
   .print-only{display:block}
+  /* The hero's intro animation (.hero-copy > * starts at opacity:0 and
+     animates in) never gets to "finished" in a print snapshot — nothing
+     ever paints a frame once it completes, so every child, including this
+     print-only line, would otherwise print blank. */
+  .hero-copy > *{opacity:1!important;transform:none!important;animation:none!important}
 
   .hero,.hero-inner{min-height:0;padding-top:0}
   .hero::before,.hero::after{display:none}
