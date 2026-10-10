@@ -729,17 +729,30 @@ function initCompass(){
     caseAng: 0, prevCase: -1.4, kick: 0,
     px: 0, py: 0, tx: 0, ty: 0
   };
+  // Rendering (not the physics below, which stays cheap either way) only
+  // needs to run at full rate during the intro and while something is
+  // actually changing in response to the visitor. The ambient tremor/bob
+  // afterwards moves on multi-second sine-wave cycles, so once there's been
+  // no scroll or pointer input for a while, dropping the actual WebGL
+  // render to a much lower rate is invisible to look at but cuts ongoing
+  // CPU/GPU/battery cost substantially — this loop otherwise runs forever
+  // for as long as the hero stays in view.
+  const IDLE_AFTER_MS = 1200, IDLE_FRAME_MS = 90;   // ~11fps once idle
+  let lastInput = performance.now();
+  const markInput = () => { lastInput = performance.now(); };
+
   let lastY = window.scrollY;
-  window.addEventListener("scroll", () => { S.kick += window.scrollY - lastY; lastY = window.scrollY; }, {passive:true});
+  window.addEventListener("scroll", () => { S.kick += window.scrollY - lastY; lastY = window.scrollY; markInput(); }, {passive:true});
   hero.addEventListener("pointermove", e => {
     if (e.pointerType !== "mouse") return;
     const r = hero.getBoundingClientRect();
     S.tx = (e.clientX - r.left) / r.width * 2 - 1;
     S.ty = (e.clientY - r.top) / r.height * 2 - 1;
+    markInput();
   });
-  hero.addEventListener("pointerleave", () => { S.tx = 0; S.ty = 0; });
+  hero.addEventListener("pointerleave", () => { S.tx = 0; S.ty = 0; markInput(); });
 
-  const t0 = performance.now(); let last = t0, raf = 0, visible = true;
+  const t0 = performance.now(); let last = t0, raf = 0, visible = true, lastDraw = 0;
   function frame(now){
     raf = requestAnimationFrame(frame);
     const dt = Math.min((now - last) / 1000, .05); last = now;
@@ -773,7 +786,8 @@ function initCompass(){
     shadow.scale.setScalar(1 - bob * .6);
     shadowMat.opacity = Math.max(0, .9 - lift * .6) * e;
 
-    draw();
+    const idle = e >= 1 && (now - lastInput) > IDLE_AFTER_MS;
+    if (!idle || now - lastDraw >= IDLE_FRAME_MS){ lastDraw = now; draw(); }
   }
   const run = () => { if (!raf && visible && !document.hidden){ last = performance.now(); raf = requestAnimationFrame(frame); } };
   const stop = () => { cancelAnimationFrame(raf); raf = 0; };

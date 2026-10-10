@@ -11,7 +11,14 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<!-- Loaded as a non-blocking preload rather than a plain stylesheet link,
+     so the browser doesn't have to wait on this fetch before it can paint
+     anything: the swap to rel="stylesheet" happens once it's ready, and
+     &display=swap in the URL means text already on screen in a fallback
+     font isn't hidden while that happens. The <noscript> keeps this working
+     (just blocking, as before) for the rare visitor without JS. -->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet"></noscript>
 
 <script>
   /* Bring back the dyslexia-friendly font before first paint if chosen last time. */
@@ -839,16 +846,23 @@ html.preview-open{overflow:hidden}
   </div>
 </dialog>
 
-<!-- Libraries: 3D compass (three.js), world map (d3 + topojson).
+<!-- Libraries: 3D compass (three.js), world map (d3-geo + topojson).
      defer (rather than a plain blocking <script src>) lets the browser
      keep parsing and painting the rest of the document while these
      download, instead of pausing on each one in turn; assets/main.js is
-     deferred too so execution order (these three, then main.js) is kept —
-     defer scripts always run in source order, right before
-     DOMContentLoaded, and main.js depends on THREE/d3/topojson being
-     loaded first. -->
+     deferred too so execution order (these, then main.js) is kept — defer
+     scripts always run in source order, right before DOMContentLoaded, and
+     main.js depends on THREE/d3/topojson being loaded first.
+
+     Only three d3 functions are used (geoNaturalEarth1, geoPath,
+     geoGraticule, all in assets/main.js's drawMap()) — none of the rest of
+     the full d3 bundle (selections, scales, etc.), so this loads d3-geo
+     directly instead, which is ~24KB smaller. d3-geo's own UMD build
+     expects d3-array's exports already sitting on the global `d3` object
+     it extends (that's its one dependency), so d3-array has to load first. -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-array@3.2.4/dist/d3-array.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-geo@3.1.1/dist/d3-geo.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js" defer></script>
 <script src="assets/main.js" defer></script>
 </body>
