@@ -8,6 +8,12 @@ let ISSUES = [];
 (function(){
 "use strict";
 const REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+// The compass renders much smaller on a phone (.stage caps at min(400px,86vw)
+// there, vs up to 620px on desktop — see index.html), so matching desktop's
+// pixel ratio, antialiasing, and dial texture resolution costs real GPU/CPU
+// time there for detail nobody can see at that size. Checked once, like
+// REDUCED above, rather than reactively on resize/rotate.
+const MOBILE = window.matchMedia("(max-width: 700px)").matches;
 const byId = id => ISSUES.find(i => i.id === id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
@@ -606,9 +612,9 @@ function initCompass(){
   if (!window.THREE){ stage.classList.add("no-webgl"); return; }
   let renderer;
   try{
-    renderer = new THREE.WebGLRenderer({antialias:true, alpha:true, powerPreference:"high-performance"});
+    renderer = new THREE.WebGLRenderer({antialias:!MOBILE, alpha:true, powerPreference:"high-performance"});
   }catch(e){ stage.classList.add("no-webgl"); return; }
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, MOBILE ? 1 : 2));
   renderer.outputEncoding = THREE.sRGBEncoding;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.0;
@@ -644,7 +650,7 @@ function initCompass(){
   band.rotation.x = Math.PI / 2; band.position.y = .015; body.add(band);
 
   // dial
-  const dialCanvas = document.createElement("canvas"); dialCanvas.width = dialCanvas.height = 1024;
+  const dialCanvas = document.createElement("canvas"); dialCanvas.width = dialCanvas.height = MOBILE ? 512 : 1024;
   drawDial(dialCanvas);
   const dialTex = new THREE.CanvasTexture(dialCanvas);
   dialTex.encoding = THREE.sRGBEncoding;

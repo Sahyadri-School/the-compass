@@ -15,7 +15,8 @@ the-compass/
 ├── .pages.yml                     ← Pages CMS config (see "Adding a new issue")
 ├── index.html
 ├── assets/
-│   └── main.js                    ← index.html's script, loaded with `defer`
+│   ├── main.js                    ← index.html's script, loaded with `defer`
+│   └── og-image.jpg               ← social-preview image for index.html's og:image
 ├── submit.html                   ← "Write for us" submissions page
 ├── 404.html                      ← styled not-found page
 ├── robots.txt
